@@ -20,7 +20,7 @@ pip3 install numpy matplotlib pandas argparse scipy --user
 
 [`plot_diagrams.py`](https://github.com/arthursn/transformation-diagrams/blob/master/plot_diagrams.py):
 
-```bash
+```
 usage: plot_diagrams.py [-h] [-g GS] [-C C] [-Si SI] [-Mn MN] [-Ni NI] [-Mo MO] 
 [-Cr CR] [-V V] [-Co CO] [-Cu CU] [-Al AL] [-W W] [-Tini TINI]
 
@@ -47,7 +47,7 @@ optional arguments:
 
 [`plot_phase_fractions.py`](https://github.com/arthursn/transformation-diagrams/blob/master/plot_phase_fractions.py):
 
-```bash
+```
 usage: plot_phase_fractions.py [-h] -Tini TINI -t T [-phi PHI] [-g GS] [-C C] [-Si SI] 
 [-Mn MN] [-Ni NI] [-Mo MO] [-Cr CR] [-V V] [-Co CO] [-Cu CU] [-Al AL] [-W W]
 
