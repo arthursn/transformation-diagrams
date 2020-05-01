@@ -289,7 +289,7 @@ class PhaseTransformation(object):
         self.alloy = alloy
         self.initialize()
         # Check for compulsory object attributes
-        for var in ['comp_factor', 'Ts']:
+        for var in ['comp_factor', 'Ts', 'Tf']:
             if not hasattr(self, var):
                 raise NotImplementedError('Object {} lacks required `{}` attribute'.format(self, var))
 
@@ -337,7 +337,7 @@ class PhaseTransformation(object):
 
         return float(Tt) if nt == 1 else Tt
 
-    def get_transformed_fraction(self, t, T, dt=1e-1):
+    def get_transformed_fraction(self, t, T, n=1000):
         """
         t, T : iterables
         """
@@ -350,16 +350,16 @@ class PhaseTransformation(object):
 
         # To ensure convergence of the algorithm, the T(t) thermal cycle is
         # adjusted by a spline and the nucleation time is calculated by
-        # increments dt
-        t = np.arange(min(t), max(t) + dt/2, dt)
-        n = len(t)
+        # increments dt = (max(t) - min(t))/n
+        dt = (max(t) - min(t))/(n - 1)
+        t = np.linspace(min(t), max(t), n)
         T = t2T(t)
         nucleation_time = np.full(t.shape, 0, dtype=float)
         f = np.full(T.shape, 0, dtype=float)
 
         # Calculates nucleation time only for T lower than transformation
-        # start temperature and higher than Ms
-        filtr = (T < self.Ts) & (T > self.alloy.Ms)
+        # start temperature and higher than Tf
+        filtr = (T < self.Ts) & (T > self.Tf)
         if np.any(filtr):
             nucleation_time[filtr] = dt/self.get_transformation_factor(T[filtr])
             nucleation_time = nucleation_time.cumsum()
@@ -389,6 +389,7 @@ class Ferrite(PhaseTransformation):
     def initialize(self):
         self.comp_factor = self.alloy.FC  # composition factor for calculating transformation time
         self.Ts = self.alloy.Ae3  # transformation start temperature
+        self.Tf = self.alloy.Bs  # transformation finish temperature
 
 
 class Pearlite(PhaseTransformation):
@@ -402,6 +403,7 @@ class Pearlite(PhaseTransformation):
     def initialize(self):
         self.comp_factor = self.alloy.PC  # composition factor for calculating transformation time
         self.Ts = self.alloy.Ae1  # transformation start temperature
+        self.Tf = self.alloy.Bs  # transformation finish temperature
 
 
 class Bainite(PhaseTransformation):
@@ -415,6 +417,7 @@ class Bainite(PhaseTransformation):
     def initialize(self):
         self.comp_factor = self.alloy.BC  # composition factor for calculating transformation time
         self.Ts = self.alloy.Bs  # transformation start temperature
+        self.Tf = self.alloy.Ms  # transformation finish temperature
 
 
 class Martensite:
@@ -429,7 +432,7 @@ class Martensite:
         C, Mn, Si, Ni, Cr, Mo, Co = parse_comp(**self.alloy.w)
         self.alloy.alpha = 1e-3*(27.2 - (0.14*Mn + 0.21*Si + 0.11*Cr + 0.08*Ni + 0.05*Mo) - 19.8*(1-np.exp(-1.56*C)))
 
-    def get_transformed_fraction(self, t, T, dt=1e-1):
+    def get_transformed_fraction(self, t, T, n=1000):
         """
         t, T : iterables
         Koistinen-Marburger equation
@@ -441,8 +444,7 @@ class Martensite:
             # Uses linear interpolator
             t2T = interp1d(t, T)
 
-        t = np.arange(min(t), max(t) + dt/2, dt)
-        n = len(t)
+        t = np.linspace(min(t), max(t), n)
         T = t2T(t)
         f = np.full(T.shape, 0, dtype=float)
 
@@ -465,14 +467,14 @@ class TransformationDiagrams:
         self.bainite = Bainite(self.alloy)
         self.martensite = Martensite(self.alloy)
 
-    def get_transformed_fraction(self, t, T, dt=1e-1):
+    def get_transformed_fraction(self, t, T, n=1000):
         """
         Get transformation curves for a given T(t) thermal cycle
         """
-        t, T, f_ferr = self.ferrite.get_transformed_fraction(t, T, dt)
-        t, T, f_pear = self.pearlite.get_transformed_fraction(t, T, dt)
-        t, T, f_bain = self.bainite.get_transformed_fraction(t, T, dt)
-        t, T, f_mart = self.martensite.get_transformed_fraction(t, T, dt)
+        t, T, f_ferr = self.ferrite.get_transformed_fraction(t, T, n)
+        t, T, f_pear = self.pearlite.get_transformed_fraction(t, T, n)
+        t, T, f_bain = self.bainite.get_transformed_fraction(t, T, n)
+        t, T, f_mart = self.martensite.get_transformed_fraction(t, T, n)
 
         f_ferr_inc = np.diff(f_ferr, prepend=0)
         f_pear_inc = np.diff(f_pear, prepend=0)
@@ -640,13 +642,23 @@ class TransformationDiagrams:
 
         return ax
 
-    def plot_phase_fraction(self, t, T, dt=1e-1, xaxis='t', ax=None, **kwargs):
+    def plot_phase_fraction(self, t, T, n=1000, xaxis='t', ax=None, **kwargs):
         if ax is None:
             fig, ax = plt.subplots()
         else:
             fig = ax.get_figure()
 
-        f = self.get_transformed_fraction(t, T, dt)
+        if len(t) > 3:
+            # Fits T(t) by spline
+            def t2T(t_): return splev(t_, splrep(t, T))
+        else:
+            # Uses linear interpolator
+            t2T = interp1d(t, T)
+
+        t = np.linspace(min(t), max(t), n)
+        T = t2T(t)
+
+        f = self.get_transformed_fraction(t, T, n)
         ax.plot(f[xaxis], f['ferrite'], label='Ferrite')
         ax.plot(f[xaxis], f['pearlite'], label='Pearlite')
         ax.plot(f[xaxis], f['bainite'], label='Bainite')
