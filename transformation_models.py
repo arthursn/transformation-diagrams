@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from abc import ABC, abstractmethod
 from scipy import integrate
 from scipy.interpolate import splrep, splev, interp1d
+from scipy.optimize import root
 
 R = 8.314459
 K = 273.15
@@ -161,7 +162,7 @@ class Alloy:
 
 class SigmoidalFunction(ABC):
     """
-    Abstract class for S(X) and I(X) functions. Once initialized, 
+    Abstract class for S(X) and I(X) functions. Once initialized,
     calculates values of the function for a given [xmin, xmax]
     interval and then creates a spline interpolator. The returned
     values are calculated by the interpolator. This method has the
@@ -268,7 +269,7 @@ class I(SigmoidalFunction):
 
 class DiffPhaseTransformation(ABC):
     """
-    Abstract class for calculating kinetics of diffusional phase 
+    Abstract class for calculating kinetics of diffusional phase
     transformations
     """
 
@@ -435,6 +436,10 @@ class Martensite:
 
 
 class TransformationDiagrams:
+    col_label_dict = dict(t='Time (s)', T=u'Temperature (°C)',
+                          ferrite='Ferrite', pearlite='Pearlite',
+                          martensite='Martensite', austenite='Austenite')
+
     def __init__(self, alloy):
         self.alloy = alloy
 
@@ -443,25 +448,65 @@ class TransformationDiagrams:
         self.bainite = Bainite(self.alloy)
         self.martensite = Martensite(self.alloy)
 
-    # def get_transformed_fraction(self, t, T, n=1000):
-    #     t, T, f_ferr = self.ferrite.get_transformed_fraction(t, T, n)
-    #     t, T, f_pear = self.pearlite.get_transformed_fraction(t, T, n)
-    #     t, T, f_bain = self.bainite.get_transformed_fraction(t, T, n)
-    #     t, T, f_mart = self.martensite.get_transformed_fraction(t, T, n)
+    def get_transformed_fraction(self, t, T, n=1000):
+        t, T, f_ferr = self.ferrite.get_transformed_fraction(t, T, n)
+        t, T, f_pear = self.pearlite.get_transformed_fraction(t, T, n)
+        t, T, f_bain = self.bainite.get_transformed_fraction(t, T, n)
+        t, T, f_mart = self.martensite.get_transformed_fraction(t, T, n)
 
-    #     # corr_ferr = 1. - f_pear - f_bain - f_mart
-    #     # corr_pear = 1. - f_ferr - f_bain - f_mart
-    #     # corr_bain = 1. - f_ferr - f_pear - f_mart
-    #     # corr_mart = 1. - f_ferr - f_pear - f_bain
-    #     # f_ferr *= corr_ferr
-    #     # f_pear *= corr_pear
-    #     # f_bain *= corr_bain
-    #     # f_mart *= corr_mart
+        f_ferr_diff = np.diff(f_ferr, prepend=0)
+        f_pear_diff = np.diff(f_pear, prepend=0)
+        f_bain_diff = np.diff(f_bain, prepend=0)
+        f_mart_diff = np.diff(f_mart, prepend=0)
 
-    #     f = pd.DataFrame(dict(t=t, T=T,
-    #                           ferrite=f_ferr, pearlite=f_pear,
-    #                           bainite=f_bain, martensite=f_mart))
-    #     return f
+        f_corr = pd.DataFrame(columns=['t', 'T', 'ferrite', 'pearlite', 'bainite', 'martensite', 'austenite'])
+        f_corr['t'] = t
+        f_corr['T'] = T
+        f_corr['austenite'] = 1.
+        f_corr.fillna(0, inplace=True)
+
+        def f1(i, x, y, z, w): return f_corr.loc[i-1, 'ferrite'] + f_ferr_diff[i]*(1 - y - z - w) - x
+
+        def f2(i, x, y, z, w): return f_corr.loc[i-1, 'pearlite'] + f_pear_diff[i]*(1 - x - z - w) - y
+
+        def f3(i, x, y, z, w): return f_corr.loc[i-1, 'bainite'] + f_bain_diff[i]*(1 - x - y - w) - z
+
+        def f4(i, x, y, z, w): return f_corr.loc[i-1, 'martensite'] + f_mart_diff[i]*(1 - x - y - z) - w
+
+        for i in range(len(f_corr))[1:]:
+            x0 = [f_corr.loc[i-1, 'ferrite'], f_corr.loc[i-1, 'pearlite'],
+                  f_corr.loc[i-1, 'bainite'], f_corr.loc[i-1, 'martensite']]
+
+            res = root(lambda x: [f1(i, *x), f2(i, *x), f3(i, *x), f4(i, *x)], x0=x0)
+
+            f_corr.loc[i, 'ferrite'] = res.x[0]
+            f_corr.loc[i, 'pearlite'] = res.x[1]
+            f_corr.loc[i, 'bainite'] = res.x[2]
+            f_corr.loc[i, 'martensite'] = res.x[3]
+            f_corr.loc[i, 'austenite'] = 1. - res.x.sum()
+
+        return f_corr
+
+    def draw_thermal_cycle(self, t, T, n=100, ax=None, **kwargs):
+        if ax is None:
+            fig, ax = plt.subplots()
+        else:
+            fig = ax.get_figure()
+
+        if len(t) > 3:
+            # Fits T(t) by spline
+            def t2T(t_): return splev(t_, splrep(t, T))
+        else:
+            # Uses linear interpolator
+            t2T = interp1d(t, T)
+
+        t = np.linspace(min(t), max(t), n)
+        T = t2T(t)
+
+        kw = dict(color='k', ls='--')
+        kw.update(kwargs)
+
+        return ax.plot(t, T, **kw)
 
     def TTT(self, fs=1e-2, ff=.99, ax=None, **kwargs):
         if ax is None:
@@ -558,6 +603,35 @@ class TransformationDiagrams:
 
         return ax
 
+    def plot_phase_fraction(self, t, T, n=1000, xaxis='t', ax=None, **kwargs):
+        if ax is None:
+            fig, ax = plt.subplots()
+        else:
+            fig = ax.get_figure()
+
+        if len(t) > 3:
+            # Fits T(t) by spline
+            def t2T(t_): return splev(t_, splrep(t, T))
+        else:
+            # Uses linear interpolator
+            t2T = interp1d(t, T)
+
+        t = np.linspace(min(t), max(t), n)
+        T = t2T(t)
+
+        f = self.get_transformed_fraction(t, T, n)
+        ax.plot(f[xaxis], f['ferrite'], label='Ferrite')
+        ax.plot(f[xaxis], f['pearlite'], label='Pearlite')
+        ax.plot(f[xaxis], f['bainite'], label='Bainite')
+        ax.plot(f[xaxis], f['martensite'], label='Martensite')
+        ax.plot(f[xaxis], f['austenite'], label='Austenite')
+
+        ax.set_xlabel(self.col_label_dict[xaxis])
+        ax.set_ylabel('Phase fraction')
+        ax.legend()
+
+        return ax
+
 
 if __name__ == '__main__':
     # alloy = Alloy(gs=6, C=0.093, Si=0.209, Mn=1.87, Ni=0.001, Cr=0,
@@ -566,16 +640,20 @@ if __name__ == '__main__':
 
     diagrams = TransformationDiagrams(alloy)
 
-    # f = diagrams.get_transformed_fraction([0, 1e4], [1000, 300])
-    # plt.plot(f['T'], f.iloc[:, 2:])
+    t, T = [0, 2000], [1000, 300]
 
-    ax = diagrams.TTT()
-    ax.set_xlim(1e-2, 1e8)
-    ax.set_ylim(300, 1000)
+    ax = diagrams.CCT(Tini=1000)
 
-    ax1 = diagrams.CCT()
-    ax1.set_xlim(1e-2, 1e8)
-    ax1.set_ylim(300, 1000)
+    diagrams.draw_thermal_cycle(t, T, ax=ax)
+    diagrams.plot_phase_fraction(t, T, xaxis='T')
+
+    # ax = diagrams.TTT()
+    # ax.set_xlim(1e-2, 1e8)
+    # ax.set_ylim(300, 1000)
+
+    # ax1 = diagrams.CCT()
+    # ax1.set_xlim(1e-2, 1e8)
+    # ax1.set_ylim(300, 1000)
 
     # ax2 = ax.twinx()
 
