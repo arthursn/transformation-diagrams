@@ -1,10 +1,10 @@
-#!/usr/bin/env/ python3
+#!/usr/bin/env python3
 #! -*- coding: utf-8 -*-
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from scipy import integrate
 from scipy.interpolate import splrep, splev, interp1d
 from scipy.optimize import root
@@ -160,7 +160,7 @@ class Alloy:
         return '-'.join(fmt) + ' (wt.%)'
 
 
-class SigmoidalFunction(ABC):
+class SigmoidalFunction(object):
     """
     Abstract class for S(X) and I(X) functions. Once initialized,
     calculates values of the function for a given [xmin, xmax]
@@ -183,7 +183,7 @@ class SigmoidalFunction(ABC):
         # Check for compulsory subclass attributes
         for var in ['xmin', 'xmax', 'ymin', 'ymax', 'n']:
             if not hasattr(cls, var):
-                raise NotImplementedError(f'Class {cls} lacks required `{var}` class attribute')
+                raise NotImplementedError('Class {} lacks required `{}` class attribute'.format(cls, var))
 
         # This is were S(X) or I(X) is returned
         return cls.val(x)
@@ -279,7 +279,7 @@ class I(SigmoidalFunction):
         return 1./(x**(2.*(1. - x)/3.)*(1. - x)**(2.*x/3.))
 
 
-class PhaseTransformation(ABC):
+class PhaseTransformation(object):
     """
     Abstract class for calculating kinetics of diffusional phase
     transformations
@@ -291,14 +291,14 @@ class PhaseTransformation(ABC):
         # Check for compulsory object attributes
         for var in ['comp_factor', 'Ts']:
             if not hasattr(self, var):
-                raise NotImplementedError(f'Object {self} lacks required `{var}` attribute')
+                raise NotImplementedError('Object {} lacks required `{}` attribute'.format(self, var))
 
     @classmethod
     def __init_subclass__(cls):
         # Check for compulsory subclass attributes
         for var in ['Q', 'n1', 'n2']:
             if not hasattr(cls, var):
-                raise NotImplementedError(f'Class {cls} lacks required `{var}` class attribute')
+                raise NotImplementedError('Class {} lacks required `{}` class attribute'.format(cls, var))
 
     @abstractmethod
     def initialize(self):
