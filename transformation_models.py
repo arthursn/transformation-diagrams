@@ -90,7 +90,7 @@ def Ae3_Andrews(**comp):
     return 871 - 254.4*np.sqrt(C) + 51.7*Si - 14.2*Ni
 
 
-def Bs(**comp):
+def Bs_Li(**comp):
     """
     Bs calculation from Li's work
     """
@@ -98,12 +98,28 @@ def Bs(**comp):
     return 637 - 58*C - 35*Mn - 15*Ni - 34*Cr - 41*Mo
 
 
-def Ms(**comp):
+def Bs_VanBohemen(**comp):
+    """
+    [1] S.M.C. van Bohemen, Mater. Sci. Technol. 28 (2012) 487–495.
+    """
+    C, Mn, Si, Ni, Cr, Mo, Co = parse_comp(**comp)
+    return 839 - (86*Mn + 23*Si + 67*Cr + 33*Ni + 75*Mo) - 270*(1 - np.exp(-1.33*C))
+
+
+def Ms_Andrews(**comp):
     """
     Andrews' equation for Ms
     """
     C, Mn, Si, Ni, Cr, Mo, Co = parse_comp(**comp)
     return 539 - 423*C - 30.4*Mn - 17.7*Ni - 12.1*Cr - 7.5*Mo + 10*Co - 7.5*Si
+
+
+def Ms_VanBohemen(**comp):
+    """
+    [1] S.M.C. van Bohemen, Mater. Sci. Technol. 28 (2012) 487–495.
+    """
+    C, Mn, Si, Ni, Cr, Mo, Co = parse_comp(**comp)
+    return 565 - (31*Mn + 13*Si + 10*Cr + 18*Ni + 12*Mo) - 600*(1-np.exp(-0.96*C))
 
 
 class Alloy:
@@ -129,8 +145,10 @@ class Alloy:
         self.Ae1 = Ae1_Grange(**w)
         # self.Ae3 = 970
         # self.Ae1 = 590
-        self.Bs = Bs(**w)
-        self.Ms = Ms(**w)
+        # self.Bs = Bs_Li(**w)
+        # self.Ms = Ms_Andrews(**w)
+        self.Bs = Bs_VanBohemen(**w)
+        self.Ms = Ms_VanBohemen(**w)
 
     def format_composition(self, vmin=0):
         fmt = []
@@ -151,10 +169,10 @@ class SigmoidalFunction(ABC):
     kind of iterator)
     """
     n = 999
-    xmin = 1e-3
-    xmax = 1. - xmin
-    ymin = None
-    ymax = None
+    xmin = 0.001
+    xmax = 0.999
+    ymin = 0.02638507
+    ymax = 2.02537893
     tck = None  # tck spline knots, coefficients and degree
     tck_inv = None  # spline parameters of the inverse function
 
@@ -166,7 +184,6 @@ class SigmoidalFunction(ABC):
         if cls is SigmoidalFunction:
             raise TypeError("Can't instantiate abstract class SigmoidalFunction")
 
-        cls.init_spline()
         # This is were S(X) or I(X) is returned
         return cls.val(x)
 
@@ -325,24 +342,25 @@ class DiffPhaseTransformation(ABC):
         t = np.linspace(min(t), max(t), n)
         T = t2T(t)
         nucleation_time = np.full(t.shape, 0, dtype=float)
+        f = np.full(T.shape, 0, dtype=float)
 
         # Calculates nucleation time only for T lower than transformation
-        # start temperature
-        filtr = T < self.Ts
-        nucleation_time[filtr] = dt/self.get_transformation_factor(T[filtr])
-        nucleation_time = nucleation_time.cumsum()
-        if T[0] < self.Ts:
-            # This is the factor corresponding to the transformed fraction at t[0]
-            nucleation_time += min(t)/self.get_transformation_factor(T[0])
+        # start temperature and higher than Ms
+        filtr = (T < self.Ts) & (T > self.alloy.Ms)
+        if np.any(filtr):
+            nucleation_time[filtr] = dt/self.get_transformation_factor(T[filtr])
+            nucleation_time = nucleation_time.cumsum()
+            if T[0] < self.Ts:
+                # This is the factor corresponding to the transformed fraction at t[0]
+                nucleation_time += min(t)/self.get_transformation_factor(T[0])
 
-        # Calculated transformed fractions a
-        f = np.full(T.shape, 0, dtype=float)
-        # New filter: calculates f only for nucleation_time inside the bounds
-        # of S.inv(y)
-        filtr = (nucleation_time >= S.ymin) & (nucleation_time <= S.ymax)
-        f[filtr] = S.inv(nucleation_time[filtr])
-        f[nucleation_time < S.ymin] = 0
-        f[nucleation_time > S.ymax] = 1
+            # New filter: calculates f only for nucleation_time inside the bounds
+            # of S.inv(y)
+            filtr = (nucleation_time >= S.ymin) & (nucleation_time <= S.ymax)
+            if np.any(filtr):
+                f[filtr] = S.inv(nucleation_time[filtr])
+                f[nucleation_time < S.ymin] = 0
+                f[nucleation_time > S.ymax] = 1
 
         return t, T, f
 
@@ -391,8 +409,29 @@ class Martensite:
         self.alloy = alloy
         self.Ts = self.alloy.Ms
 
+        C, Mn, Si, Ni, Cr, Mo, Co = parse_comp(**self.alloy.w)
+        self.alloy.alpha = 1e-3*(27.2 - (0.14*Mn + 0.21*Si + 0.11*Cr + 0.08*Ni + 0.05*Mo) - 19.8*(1-np.exp(-1.56*C)))
+
     def get_transformed_fraction(self, t, T, n=1000):
-        pass
+        """
+        t, T : iterables
+        Koistinen-Marburger equation
+        """
+        if len(t) > 3:
+            # Fits T(t) by spline
+            def t2T(t_): return splev(t_, splrep(t, T))
+        else:
+            # Uses linear interpolator
+            t2T = interp1d(t, T)
+
+        t = np.linspace(min(t), max(t), n)
+        T = t2T(t)
+        f = np.full(T.shape, 0, dtype=float)
+
+        filtr = T < self.alloy.Ms
+        if np.any(filtr):
+            f[filtr] = 1 - np.exp(-self.alloy.alpha*(self.alloy.Ms - T[filtr]))
+        return t, T, f
 
 
 class TransformationDiagrams:
@@ -402,6 +441,27 @@ class TransformationDiagrams:
         self.ferrite = Ferrite(self.alloy)
         self.pearlite = Pearlite(self.alloy)
         self.bainite = Bainite(self.alloy)
+        self.martensite = Martensite(self.alloy)
+
+    # def get_transformed_fraction(self, t, T, n=1000):
+    #     t, T, f_ferr = self.ferrite.get_transformed_fraction(t, T, n)
+    #     t, T, f_pear = self.pearlite.get_transformed_fraction(t, T, n)
+    #     t, T, f_bain = self.bainite.get_transformed_fraction(t, T, n)
+    #     t, T, f_mart = self.martensite.get_transformed_fraction(t, T, n)
+
+    #     # corr_ferr = 1. - f_pear - f_bain - f_mart
+    #     # corr_pear = 1. - f_ferr - f_bain - f_mart
+    #     # corr_bain = 1. - f_ferr - f_pear - f_mart
+    #     # corr_mart = 1. - f_ferr - f_pear - f_bain
+    #     # f_ferr *= corr_ferr
+    #     # f_pear *= corr_pear
+    #     # f_bain *= corr_bain
+    #     # f_mart *= corr_mart
+
+    #     f = pd.DataFrame(dict(t=t, T=T,
+    #                           ferrite=f_ferr, pearlite=f_pear,
+    #                           bainite=f_bain, martensite=f_mart))
+    #     return f
 
     def TTT(self, fs=1e-2, ff=.99, ax=None, **kwargs):
         if ax is None:
@@ -500,23 +560,28 @@ class TransformationDiagrams:
 
 
 if __name__ == '__main__':
-    # fig, ax = plt.subplots()
-
-    alloy = Alloy(gs=6, C=0.093, Si=0.209, Mn=1.87, Ni=0.001, Cr=0,
-                  Mo=0.006, V=0.006, Al=0.027, Cu=0.031, Co=0, Ti=0.002)
+    # alloy = Alloy(gs=6, C=0.093, Si=0.209, Mn=1.87, Ni=0.001, Cr=0,
+    #               Mo=0.006, V=0.006, Al=0.027, Cu=0.031, Co=0, Ti=0.002)
     alloy = Alloy(gs=7, C=0.37, Mn=0.77, Si=0.15, Ni=0.04, Cr=0.98, Mo=0.21)
-    # ax.set_xlim(1e-2, 1e8)
-    # ax.set_ylim(300, 1000)
 
     diagrams = TransformationDiagrams(alloy)
+
+    # f = diagrams.get_transformed_fraction([0, 1e4], [1000, 300])
+    # plt.plot(f['T'], f.iloc[:, 2:])
+
     ax = diagrams.TTT()
+    ax.set_xlim(1e-2, 1e8)
+    ax.set_ylim(300, 1000)
+
     ax1 = diagrams.CCT()
+    ax1.set_xlim(1e-2, 1e8)
+    ax1.set_ylim(300, 1000)
 
     # ax2 = ax.twinx()
 
     # ferrite = diagrams.ferrite
-    # t, T, f = diagrams.ferrite.get_transformed_fraction([1e0, 1e4], [800, 800])
-    # # t, T, f = diagrams.ferrite.get_transformed_fraction([1e-4, 1e3], [700, 700], 10000)
+    # # t, T, f = diagrams.ferrite.get_transformed_fraction([1e0, 1e4], [800, 800])
+    # t, T, f = diagrams.ferrite.get_transformed_fraction([1e1, 1e4], [700, 700], 10000)
 
     # ax2.plot(t, f, 'k--')
     # ax2.set_ylim(0, 1)
