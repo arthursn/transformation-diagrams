@@ -169,11 +169,6 @@ class SigmoidalFunction(ABC):
     advantage of being able to process x as an array (or any other
     kind of iterator)
     """
-    n = 999
-    xmin = 0.001
-    xmax = 0.999
-    ymin = 0.02638507
-    ymax = 2.02537893
     tck = None  # tck spline knots, coefficients and degree
     tck_inv = None  # spline parameters of the inverse function
 
@@ -184,6 +179,11 @@ class SigmoidalFunction(ABC):
         """
         if cls is SigmoidalFunction:
             raise TypeError("Can't instantiate abstract class SigmoidalFunction")
+
+        # Check for compulsory subclass attributes
+        for var in ['xmin', 'xmax', 'ymin', 'ymax', 'n']:
+            if not hasattr(cls, var):
+                raise NotImplementedError(f'Class {cls} lacks required `{var}` class attribute')
 
         # This is were S(X) or I(X) is returned
         return cls.val(x)
@@ -248,6 +248,12 @@ class SigmoidalFunction(ABC):
 
 
 class S(SigmoidalFunction):
+    n = 999
+    xmin = 0.001
+    xmax = 0.999
+    ymin = 0.02638507
+    ymax = 2.02537893
+
     """
     S(X) function calculated using numerical integration and
     spline interpolation
@@ -262,12 +268,18 @@ class I(SigmoidalFunction):
     I(X) function calculated using numerical integration and
     spline interpolation
     """
+    n = 999
+    xmin = 0.001
+    xmax = 0.999
+    ymin = 0.29961765
+    ymax = 4.05928646
+
     @staticmethod
     def f(x):
         return 1./(x**(2.*(1. - x)/3.)*(1. - x)**(2.*x/3.))
 
 
-class DiffPhaseTransformation(ABC):
+class PhaseTransformation(ABC):
     """
     Abstract class for calculating kinetics of diffusional phase
     transformations
@@ -366,7 +378,7 @@ class DiffPhaseTransformation(ABC):
         return t, T, f
 
 
-class Ferrite(DiffPhaseTransformation):
+class Ferrite(PhaseTransformation):
     """
     Austenite to ferrite phase transformation
     """
@@ -379,7 +391,7 @@ class Ferrite(DiffPhaseTransformation):
         self.Ts = self.alloy.Ae3  # transformation start temperature
 
 
-class Pearlite(DiffPhaseTransformation):
+class Pearlite(PhaseTransformation):
     """
     Austenite to pearlite phase transformation
     """
@@ -392,7 +404,7 @@ class Pearlite(DiffPhaseTransformation):
         self.Ts = self.alloy.Ae1  # transformation start temperature
 
 
-class Bainite(DiffPhaseTransformation):
+class Bainite(PhaseTransformation):
     """
     Austenite to bainite phase transformation
     """
@@ -406,6 +418,10 @@ class Bainite(DiffPhaseTransformation):
 
 
 class Martensite:
+    """
+    Athermal austenite to martensite transformation
+    """
+
     def __init__(self, alloy):
         self.alloy = alloy
         self.Ts = self.alloy.Ms
@@ -449,15 +465,26 @@ class TransformationDiagrams:
         self.martensite = Martensite(self.alloy)
 
     def get_transformed_fraction(self, t, T, n=1000):
+        """
+        Get transformation curves for a given T(t) thermal cycle
+        """
         t, T, f_ferr = self.ferrite.get_transformed_fraction(t, T, n)
         t, T, f_pear = self.pearlite.get_transformed_fraction(t, T, n)
         t, T, f_bain = self.bainite.get_transformed_fraction(t, T, n)
         t, T, f_mart = self.martensite.get_transformed_fraction(t, T, n)
 
-        f_ferr_diff = np.diff(f_ferr, prepend=0)
-        f_pear_diff = np.diff(f_pear, prepend=0)
-        f_bain_diff = np.diff(f_bain, prepend=0)
-        f_mart_diff = np.diff(f_mart, prepend=0)
+        f_ferr_inc = np.diff(f_ferr, prepend=0)
+        f_pear_inc = np.diff(f_pear, prepend=0)
+        f_bain_inc = np.diff(f_bain, prepend=0)
+        f_mart_inc = np.diff(f_mart, prepend=0)
+        f_ferr_inc[f_ferr < 1] /= (1. - f_ferr[f_ferr < 1])
+        f_pear_inc[f_pear < 1] /= (1. - f_pear[f_pear < 1])
+        f_bain_inc[f_bain < 1] /= (1. - f_bain[f_bain < 1])
+        f_mart_inc[f_mart < 1] /= (1. - f_mart[f_mart < 1])
+        f_ferr_inc[f_ferr == 1] = 0
+        f_pear_inc[f_pear == 1] = 0
+        f_bain_inc[f_bain == 1] = 0
+        f_mart_inc[f_mart == 1] = 0
 
         f_corr = pd.DataFrame(columns=['t', 'T', 'ferrite', 'pearlite', 'bainite', 'martensite', 'austenite'])
         f_corr['t'] = t
@@ -465,13 +492,13 @@ class TransformationDiagrams:
         f_corr['austenite'] = 1.
         f_corr.fillna(0, inplace=True)
 
-        def f1(i, x, y, z, w): return f_corr.loc[i-1, 'ferrite'] + f_ferr_diff[i]*(1 - y - z - w) - x
+        def f1(i, x, y, z, w): return f_corr.loc[i-1, 'ferrite'] + f_ferr_inc[i]*(1 - x - y - z - w) - x
 
-        def f2(i, x, y, z, w): return f_corr.loc[i-1, 'pearlite'] + f_pear_diff[i]*(1 - x - z - w) - y
+        def f2(i, x, y, z, w): return f_corr.loc[i-1, 'pearlite'] + f_pear_inc[i]*(1 - x - y - z - w) - y
 
-        def f3(i, x, y, z, w): return f_corr.loc[i-1, 'bainite'] + f_bain_diff[i]*(1 - x - y - w) - z
+        def f3(i, x, y, z, w): return f_corr.loc[i-1, 'bainite'] + f_bain_inc[i]*(1 - x - y - z - w) - z
 
-        def f4(i, x, y, z, w): return f_corr.loc[i-1, 'martensite'] + f_mart_diff[i]*(1 - x - y - z) - w
+        def f4(i, x, y, z, w): return f_corr.loc[i-1, 'martensite'] + f_mart_inc[i]*(1 - x - y - z - w) - w
 
         for i in range(len(f_corr))[1:]:
             x0 = [f_corr.loc[i-1, 'ferrite'], f_corr.loc[i-1, 'pearlite'],
@@ -488,6 +515,9 @@ class TransformationDiagrams:
         return f_corr
 
     def draw_thermal_cycle(self, t, T, n=100, ax=None, **kwargs):
+        """
+        Draw thermal cycle (cooling curve) over AxesSubplot object
+        """
         if ax is None:
             fig, ax = plt.subplots()
         else:
@@ -509,6 +539,9 @@ class TransformationDiagrams:
         return ax.plot(t, T, **kw)
 
     def TTT(self, fs=1e-2, ff=.99, ax=None, **kwargs):
+        """
+        Plot TTT diagram
+        """
         if ax is None:
             fig, ax = plt.subplots(figsize=(6, 6))
         else:
@@ -551,6 +584,9 @@ class TransformationDiagrams:
         return ax
 
     def CCT(self, Tini=900, fs=1e-2, ff=.99, cooling_rates=10**np.linspace(-4, 4, 320), ax=None, **kwargs):
+        """
+        Plot CCT diagram
+        """
         if ax is None:
             fig, ax = plt.subplots(figsize=(6, 6))
         else:
@@ -634,43 +670,46 @@ class TransformationDiagrams:
 
 
 if __name__ == '__main__':
-    # alloy = Alloy(gs=6, C=0.093, Si=0.209, Mn=1.87, Ni=0.001, Cr=0,
-    #               Mo=0.006, V=0.006, Al=0.027, Cu=0.031, Co=0, Ti=0.002)
+    # Defines alloy (grain size gs and composition)
     alloy = Alloy(gs=7, C=0.37, Mn=0.77, Si=0.15, Ni=0.04, Cr=0.98, Mo=0.21)
 
+    # Initializes diagrams object
     diagrams = TransformationDiagrams(alloy)
 
-    t, T = [0, 2000], [1000, 300]
+    # Example 1: Plot TTT and CCT diagrams
 
-    ax = diagrams.CCT(Tini=1000)
+    fig1, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
+    fig1.subplots_adjust(wspace=.2)
 
-    diagrams.draw_thermal_cycle(t, T, ax=ax)
-    diagrams.plot_phase_fraction(t, T, xaxis='T')
+    diagrams.TTT(ax=ax1)
+    ax1.set_xlim(1e-2, 1e8)
+    ax1.set_ylim(300, 1000)
 
-    # ax = diagrams.TTT()
-    # ax.set_xlim(1e-2, 1e8)
-    # ax.set_ylim(300, 1000)
+    diagrams.CCT(ax=ax2)
+    ax2.set_xlim(1e-2, 1e8)
+    ax2.set_ylim(300, 1000)
 
-    # ax1 = diagrams.CCT()
-    # ax1.set_xlim(1e-2, 1e8)
-    # ax1.set_ylim(300, 1000)
+    fig1.suptitle(ax1.get_title())
+    ax1.set_title('')
+    ax2.set_title('')
 
-    # ax2 = ax.twinx()
+    # Example 2: Plot CCT diagram and transformed fraction
 
-    # ferrite = diagrams.ferrite
-    # # t, T, f = diagrams.ferrite.get_transformed_fraction([1e0, 1e4], [800, 800])
-    # t, T, f = diagrams.ferrite.get_transformed_fraction([1e1, 1e4], [700, 700], 10000)
+    fig2, (ax3, ax4) = plt.subplots(1, 2, figsize=(12, 6))
+    fig2.subplots_adjust(wspace=.2)
 
-    # ax2.plot(t, f, 'k--')
-    # ax2.set_ylim(0, 1)
+    # Plot CCT diagram
+    diagrams.CCT(Tini=1000, ax=ax3)
 
-    # t_sel = t[(f >= .01) & (f <= .99)]
-    # try:
-    #     ax2.axvline(t_sel[0], color='r', ls=':')
-    #     ax2.axvline(t_sel[-1], color='r', ls=':')
-    # except:
-    #     pass
+    # Chooses a thermal cycle (continuous cooling from 1000 to 0 oC in
+    # 2000 s), draws cooling curve in the CCT and plots phase fraction
+    t, T = [0, 2000], [1000, 0]
+    # t, T = [0, 10000], [700, 700]
+    diagrams.draw_thermal_cycle(t, T, ax=ax3)
+    diagrams.plot_phase_fraction(t, T, xaxis='T', ax=ax4)
 
-    # ax.axhline(T[0], color='r', ls=':')
+    fig2.suptitle(ax3.get_title())
+    ax3.set_title('')
+    ax4.set_title('')
 
     plt.show()
