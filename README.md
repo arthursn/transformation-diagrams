@@ -1,8 +1,6 @@
 # About
 
-Collection of scripts for calculating TTT and CCT diagrams of iron-based alloys using the methods described on the paper by [Li et al., 1998](https://github.com/arthursn/transformation-diagrams/blob/master/literature/Li%20et%20al%2C%201998%20(MetTransB)%20%5BA%20Computational%20Model%20for%20the%20Prediction%20of%20Steel%20Hardenability%5D.pdf) [^1].
-
-[^1] M.V. Li, D. V. Niebuhr, L.L. Meekisho, D.G. Atteridge, Metall. Mater. Trans. B 29 (1998) 661–672.
+Collection of scripts for calculating TTT and CCT diagrams of iron-based alloys using the methods described on the paper by [Li et al., 1998](https://github.com/arthursn/transformation-diagrams/blob/master/literature/Li%20et%20al%2C%201998%20(MetTransB)%20%5BA%20Computational%20Model%20for%20the%20Prediction%20of%20Steel%20Hardenability%5D.pdf).
 
 Feel free to edit the code to, for instance, automatize the generation of diagrams. [`transformation_models.py`](https://github.com/arthursn/transformation-diagrams/blob/master/transformation_models.py) contains the models used for calculating the transformation diagrams. Two main classes are defined: `Alloy` and `TransformationDiagrams`. `Alloy` stores the information of the prior austenite grain size and composition, while `TransformationDiagrams` is used for plotting the TTT and CCT diagrams and phase fraction evolution for a given thermal cycle.
 
@@ -15,7 +13,7 @@ The python script works for python 2 (>= 2.7) and python 3 (>= 3.5). However, si
 The python script runs using the non standard python libraries `argparse`, `numpy`, `matplotlib`, `pandas`, and `scipy`. Install them from the [Python Package Index](https://pypi.org/):
 
 ```bash
-pip install numpy matplotlib pandas argparse scipy --user
+pip3 install numpy matplotlib pandas argparse scipy --user
 ```
 
 # Usage
