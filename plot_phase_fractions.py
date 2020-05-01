@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from transformation_models import Alloy, TransformationDiagrams
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Python interface of MUCG83 for calculating TTT and CCT diagrams')
+    parser = argparse.ArgumentParser(description='Script for plotting phase fraction curves for a given thermal cycle')
     parser.add_argument('-Tini', '--Tini', type=float, required=True, help='Initial temperature')
     parser.add_argument('-t', '--t', type=float, required=True, help='Total time')
     parser.add_argument('-phi', '--phi', type=float, default=0., help='Cooling rate (if 0, isothermal)')

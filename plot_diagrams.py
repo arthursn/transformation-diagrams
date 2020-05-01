@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from transformation_models import Alloy, TransformationDiagrams
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Python interface of MUCG83 for calculating TTT and CCT diagrams')
+    parser = argparse.ArgumentParser(description='Script for plotting TTT and CCT diagrams')
     parser.add_argument('-g', '--gs', type=float, default=6, help='Grain size')
     parser.add_argument('-C', '--C', type=float, default=0., help='Carbon wt.%%')
     parser.add_argument('-Si', '--Si', type=float, default=0., help='Silicon wt.%%')
