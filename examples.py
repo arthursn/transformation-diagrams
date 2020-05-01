@@ -41,8 +41,8 @@ if __name__ == '__main__':
     t, T = [0, 2000], [1000, 0]
 
     # get_transformed_fraction returns a pandas DataFrame
-    # n is number of points
-    data = diagrams.get_transformed_fraction(t, T, n=2000)
+    # dt is time step
+    data = diagrams.get_transformed_fraction(t, T, dt=2)
 
     # Save as csv
     data.to_csv('data.csv', index=False)

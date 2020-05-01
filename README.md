@@ -90,7 +90,7 @@ This will prompt a matplotlib window with the following TTT and CCT diagrams:
 Plot phase fraction for a thermal cycle specified by `-Tini`, `-t`, and `-phi` parameters:
 
 ```bash
-python3 plot_phase_fractions.py -C 0.1 -Mn 1 -Tini 1000 -t 50 -phi 20
+python3 plot_phase_fractions.py -C 0.1 -Mn 1 -Tini 1000 -t 100 -phi 10
 ```
 
 ![Fe-1%Mn-0.1%Mn phase fraction](img/Fe-1Mn-01C_phase_fraction.png)
