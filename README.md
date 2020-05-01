@@ -83,7 +83,7 @@ Plot TTT and CCT diagrams:
 python3 mucg83_python_interface.py -C 0.1 -Mn 1
 ```
 
-This will prompt a matplotlib window with the following TTT diagram:
+This will prompt a matplotlib window with the following TTT and CCT diagrams:
 
 ![Fe-1%Mn-0.1%Mn diagrams](img/Fe-1Mn-01C_diagrams.png)
 
