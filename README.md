@@ -8,9 +8,7 @@ The repository also contains scripts for easy plotting of phase diagrams and pha
 
 # Dependencies
 
-The python script works for python 2 (>= 2.7) and python 3 (>= 3.5). However, since support for python 2 has reached its end of life in January 2020, it is recommended to run the scripts using python 3.
-
-The python script runs using the non standard python libraries `argparse`, `numpy`, `matplotlib`, `pandas`, and `scipy`. Install them from the [Python Package Index](https://pypi.org/):
+The scripts run in python 2 (>= 2.7) and python 3 (>= 3.5). However, since support for python 2 has reached its end of life in January 2020, it is recommended to run the scripts using python 3. It uses the non standard python libraries `argparse`, `numpy`, `matplotlib`, `pandas`, and `scipy`. You can install them from the [Python Package Index](https://pypi.org/) using the [`pip`](https://pip.pypa.io/en/stable/installing/) command.
 
 ```bash
 pip3 install numpy matplotlib pandas argparse scipy --user
