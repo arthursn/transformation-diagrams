@@ -49,7 +49,7 @@ if __name__ == '__main__':
         xaxis = 't'
     else:
         # Otherwise, plot CCT
-        diagrams.CCT(Tini=1000, ax=ax1)
+        diagrams.CCT(Tini=Tini, ax=ax1)
         xaxis = 'T'
 
     t_, T_ = [0, t], [Tini, Tini - phi*t]

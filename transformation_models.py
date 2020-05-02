@@ -146,9 +146,9 @@ class Alloy:
         self.Ae1 = Ae1_Grange(**w)
         # self.Ae3 = 970
         # self.Ae1 = 590
-        # self.Bs = Bs_Li(**w)
+        self.Bs = Bs_Li(**w)
         # self.Ms = Ms_Andrews(**w)
-        self.Bs = Bs_VanBohemen(**w)
+        # self.Bs = Bs_VanBohemen(**w)
         self.Ms = Ms_VanBohemen(**w)
 
     def format_composition(self, vmin=0):
@@ -487,9 +487,17 @@ class TransformationDiagrams:
         f_corr['austenite'] = 1.
         f_corr.fillna(0, inplace=True)
 
-        def f1(i, x, y, z, w): return f_corr.loc[i-1, 'ferrite'] + f_ferr_inc[i]*(1 - y - z - w) - x
+        def f1(i, x, y, z, w):
+            if f_ferr[i] < 1:
+                return f_corr.loc[i-1, 'ferrite'] + f_ferr_inc[i]*(1 - x - y - z - w)/(1 - f_ferr[i]) - x
+            else:
+                return f_corr.loc[i-1, 'ferrite'] + f_ferr_inc[i]*(1 - y - z - w) - x
 
-        def f2(i, x, y, z, w): return f_corr.loc[i-1, 'pearlite'] + f_pear_inc[i]*(1 - x - z - w) - y
+        def f2(i, x, y, z, w):
+            if f_pear[i] < 1:
+                return f_corr.loc[i-1, 'pearlite'] + f_pear_inc[i]*(1 - x - y - z - w)/(1 - f_pear[i]) - y
+            else:
+                return f_corr.loc[i-1, 'pearlite'] + f_pear_inc[i]*(1 - x - z - w) - y
 
         def f3(i, x, y, z, w): return f_corr.loc[i-1, 'bainite'] + f_bain_inc[i]*(1 - x - y - w) - z
 
