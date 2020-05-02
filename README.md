@@ -80,7 +80,7 @@ A script with examples is available in the repository: [`examples.py`](https://g
 Plot TTT and CCT diagrams:
 
 ```bash
-python3 mucg83_python_interface.py -C 0.1 -Mn 1
+python3 plot_diagrams.py -C 0.1 -Mn 1
 ```
 
 This will prompt a matplotlib window with the following TTT and CCT diagrams:
