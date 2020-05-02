@@ -480,14 +480,6 @@ class TransformationDiagrams:
         f_pear_inc = np.diff(f_pear, prepend=0)
         f_bain_inc = np.diff(f_bain, prepend=0)
         f_mart_inc = np.diff(f_mart, prepend=0)
-        f_ferr_inc[f_ferr < 1] /= (1. - f_ferr[f_ferr < 1])
-        f_pear_inc[f_pear < 1] /= (1. - f_pear[f_pear < 1])
-        f_bain_inc[f_bain < 1] /= (1. - f_bain[f_bain < 1])
-        f_mart_inc[f_mart < 1] /= (1. - f_mart[f_mart < 1])
-        f_ferr_inc[f_ferr == 1] = 0
-        f_pear_inc[f_pear == 1] = 0
-        f_bain_inc[f_bain == 1] = 0
-        f_mart_inc[f_mart == 1] = 0
 
         f_corr = pd.DataFrame(columns=['t', 'T', 'ferrite', 'pearlite', 'bainite', 'martensite', 'austenite'])
         f_corr['t'] = t
@@ -495,13 +487,13 @@ class TransformationDiagrams:
         f_corr['austenite'] = 1.
         f_corr.fillna(0, inplace=True)
 
-        def f1(i, x, y, z, w): return f_corr.loc[i-1, 'ferrite'] + f_ferr_inc[i]*(1 - x - y - z - w) - x
+        def f1(i, x, y, z, w): return f_corr.loc[i-1, 'ferrite'] + f_ferr_inc[i]*(1 - y - z - w) - x
 
-        def f2(i, x, y, z, w): return f_corr.loc[i-1, 'pearlite'] + f_pear_inc[i]*(1 - x - y - z - w) - y
+        def f2(i, x, y, z, w): return f_corr.loc[i-1, 'pearlite'] + f_pear_inc[i]*(1 - x - z - w) - y
 
-        def f3(i, x, y, z, w): return f_corr.loc[i-1, 'bainite'] + f_bain_inc[i]*(1 - x - y - z - w) - z
+        def f3(i, x, y, z, w): return f_corr.loc[i-1, 'bainite'] + f_bain_inc[i]*(1 - x - y - w) - z
 
-        def f4(i, x, y, z, w): return f_corr.loc[i-1, 'martensite'] + f_mart_inc[i]*(1 - x - y - z - w) - w
+        def f4(i, x, y, z, w): return f_corr.loc[i-1, 'martensite'] + f_mart_inc[i]*(1 - x - y - z) - w
 
         for i in range(len(f_corr))[1:]:
             x0 = [f_corr.loc[i-1, 'ferrite'], f_corr.loc[i-1, 'pearlite'],
