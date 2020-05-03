@@ -455,9 +455,11 @@ class Martensite:
 
 
 class TransformationDiagrams:
-    col_label_dict = dict(t='Time (s)', T=u'Temperature (°C)',
-                          ferrite='Ferrite', pearlite='Pearlite',
-                          martensite='Martensite', austenite='Austenite')
+    colors_dict = dict(ferrite='#1f77b4', pearlite='#ff7f0e', bainite='#2ca02c',
+                       martensite='#d62728', austenite='#9467bd')
+    columns_label_dict = dict(t='Time (s)', T=u'Temperature (°C)',
+                              ferrite='Ferrite', pearlite='Pearlite', bainite='Bainite',
+                              martensite='Martensite', austenite='Austenite')
 
     def __init__(self, alloy):
         self.alloy = alloy
@@ -550,31 +552,29 @@ class TransformationDiagrams:
         else:
             fig = ax.get_figure()
 
-        color_cycle = ax._get_lines.prop_cycler
-
         # Ferrite
         T = np.arange(self.alloy.Bs, self.alloy.Ae3)
         ts = self.ferrite.get_transformation_time(T, fs)  # start
         tf = self.ferrite.get_transformation_time(T, ff)  # finish
-        line_ferr, = ax.plot(ts, T, label='Ferrite {:g}%'.format(100*fs), **kwargs)
-        ax.plot(tf, T, color=line_ferr.get_color(), ls='--', label='Ferrite {:g}%'.format(100*ff), **kwargs)
+        ax.plot(ts, T, color=self.colors_dict['ferrite'], label='Ferrite {:g}%'.format(100*fs), **kwargs)
+        ax.plot(tf, T, color=self.colors_dict['ferrite'], ls='--', label='Ferrite {:g}%'.format(100*ff), **kwargs)
 
         # Pearlite
         T = np.arange(self.alloy.Bs, self.alloy.Ae1)
         ts = self.pearlite.get_transformation_time(T, fs)
         tf = self.pearlite.get_transformation_time(T, ff)
-        line_pear, = ax.plot(ts, T, label='Pearlite {:g}%'.format(100*fs), **kwargs)
-        ax.plot(tf, T, color=line_pear.get_color(), ls='--', label='Pearlite {:g}%'.format(100*ff), **kwargs)
+        ax.plot(ts, T, color=self.colors_dict['pearlite'], label='Pearlite {:g}%'.format(100*fs), **kwargs)
+        ax.plot(tf, T, color=self.colors_dict['pearlite'], ls='--', label='Pearlite {:g}%'.format(100*ff), **kwargs)
 
         # Bainite
         T = np.arange(self.alloy.Ms, self.alloy.Bs)
         ts = self.bainite.get_transformation_time(T, fs)
         tf = self.bainite.get_transformation_time(T, ff)
-        line_bain, = ax.plot(ts, T, label='Bainite {:g}%'.format(100*fs), **kwargs)
-        ax.plot(tf, T, color=line_bain.get_color(), ls='--', label='Bainite {:g}%'.format(100*ff), **kwargs)
+        ax.plot(ts, T, color=self.colors_dict['bainite'], label='Bainite {:g}%'.format(100*fs), **kwargs)
+        ax.plot(tf, T, color=self.colors_dict['bainite'], ls='--', label='Bainite {:g}%'.format(100*ff), **kwargs)
 
-        ax.axhline(self.alloy.Bs, color=line_bain.get_color(), ls=':', label='Bs')
-        ax.axhline(self.alloy.Ms, color=next(color_cycle)['color'], label='Ms')
+        ax.axhline(self.alloy.Bs, color=self.colors_dict['bainite'], ls=':', label='Bs')
+        ax.axhline(self.alloy.Ms, color=self.colors_dict['martensite'], label='Ms')
 
         ax.set_xscale('log')
         ax.set_ylim(25)
@@ -595,33 +595,33 @@ class TransformationDiagrams:
         else:
             fig = ax.get_figure()
 
-        color_cycle = ax._get_lines.prop_cycler
         cooling_rates = np.array(cooling_rates)
         draw_cooling = kwargs.pop('draw_cooling', True)
 
         # Ferrite
         Ts = self.ferrite.get_transformation_temperature(Tini, self.alloy.Bs, cooling_rates, fs)  # start
         Tf = self.ferrite.get_transformation_temperature(Tini, self.alloy.Bs, cooling_rates, ff)  # finish
-        line_ferr, = ax.plot(Ts/cooling_rates, Ts, label='Ferrite {:g}%'.format(100*fs), **kwargs)
-        ax.plot(Tf/cooling_rates, Tf, color=line_ferr.get_color(),
+        ax.plot(Ts/cooling_rates, Ts, color=self.colors_dict['ferrite'], label='Ferrite {:g}%'.format(100*fs), **kwargs)
+        ax.plot(Tf/cooling_rates, Tf, color=self.colors_dict['ferrite'],
                 ls='--', label='Ferrite {:g}%'.format(100*ff), **kwargs)
 
         # Pearlite
         Ts = self.pearlite.get_transformation_temperature(Tini, self.alloy.Bs, cooling_rates, fs)
         Tf = self.pearlite.get_transformation_temperature(Tini, self.alloy.Bs, cooling_rates, ff)
-        line_pear, = ax.plot(Ts/cooling_rates, Ts, label='Pearlite {:g}%'.format(100*fs), **kwargs)
-        ax.plot(Tf/cooling_rates, Tf, color=line_pear.get_color(),
+        ax.plot(Ts/cooling_rates, Ts, color=self.colors_dict['pearlite'],
+                label='Pearlite {:g}%'.format(100*fs), **kwargs)
+        ax.plot(Tf/cooling_rates, Tf, color=self.colors_dict['pearlite'],
                 ls='--', label='Pearlite {:g}%'.format(100*ff), **kwargs)
 
         # Bainite
         Ts = self.bainite.get_transformation_temperature(Tini, self.alloy.Ms, cooling_rates, fs)
         Tf = self.bainite.get_transformation_temperature(Tini, self.alloy.Ms, cooling_rates, ff)
-        line_bain, = ax.plot(Ts/cooling_rates, Ts, label='Bainite {:g}%'.format(100*fs), **kwargs)
-        ax.plot(Tf/cooling_rates, Tf, color=line_bain.get_color(),
+        ax.plot(Ts/cooling_rates, Ts, color=self.colors_dict['bainite'], label='Bainite {:g}%'.format(100*fs), **kwargs)
+        ax.plot(Tf/cooling_rates, Tf, color=self.colors_dict['bainite'],
                 ls='--', label='Bainite {:g}%'.format(100*ff), **kwargs)
 
-        ax.axhline(self.alloy.Bs, color=line_bain.get_color(), ls=':', label='Bs')
-        ax.axhline(self.alloy.Ms, color=next(color_cycle)['color'], label='Ms')
+        ax.axhline(self.alloy.Bs, color=self.colors_dict['bainite'], ls=':', label='Bs')
+        ax.axhline(self.alloy.Ms, color=self.colors_dict['martensite'], label='Ms')
 
         # Draw cooling curves
         if draw_cooling:
@@ -659,13 +659,18 @@ class TransformationDiagrams:
         T = t2T(t)
 
         f = self.get_transformed_fraction(t, T, n)
-        ax.plot(f[xaxis], f['ferrite'], label='Ferrite')
-        ax.plot(f[xaxis], f['pearlite'], label='Pearlite')
-        ax.plot(f[xaxis], f['bainite'], label='Bainite')
-        ax.plot(f[xaxis], f['martensite'], label='Martensite')
-        ax.plot(f[xaxis], f['austenite'], label='Austenite')
+        if f['ferrite'].max() > 0:
+            ax.plot(f[xaxis], f['ferrite'], color=self.colors_dict['ferrite'], label='Ferrite')
+        if f['pearlite'].max() > 0:
+            ax.plot(f[xaxis], f['pearlite'], color=self.colors_dict['pearlite'], label='Pearlite')
+        if f['bainite'].max() > 0:
+            ax.plot(f[xaxis], f['bainite'], color=self.colors_dict['bainite'], label='Bainite')
+        if f['martensite'].max() > 0:
+            ax.plot(f[xaxis], f['martensite'], color=self.colors_dict['martensite'], label='Martensite')
+        if f['austenite'].max() > 0:
+            ax.plot(f[xaxis], f['austenite'], color=self.colors_dict['austenite'], label='Austenite')
 
-        ax.set_xlabel(self.col_label_dict[xaxis])
+        ax.set_xlabel(self.columns_label_dict[xaxis])
         ax.set_ylabel('Phase fraction')
         ax.legend()
 
