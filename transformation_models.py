@@ -486,8 +486,12 @@ class TransformationDiagrams:
         f_corr = pd.DataFrame(columns=['t', 'T', 'ferrite', 'pearlite', 'bainite', 'martensite', 'austenite'])
         f_corr['t'] = t
         f_corr['T'] = T
-        f_corr['austenite'] = 1.
         f_corr.fillna(0, inplace=True)
+        f_corr.loc[0, 'ferrite'] = f_ferr[0]
+        f_corr.loc[0, 'pearlite'] = f_pear[0]
+        f_corr.loc[0, 'bainite'] = f_bain[0]
+        f_corr.loc[0, 'martensite'] = f_mart[0]
+        f_corr.loc[0, 'austenite'] = 1. - f_ferr[0] - f_pear[0] - f_bain[0] - f_mart[0]
 
         def f1(i, x, y, z, w):
             if f_ferr[i] < 1:
@@ -517,7 +521,7 @@ class TransformationDiagrams:
             f_corr.loc[i, 'martensite'] = res.x[3]
             f_corr.loc[i, 'austenite'] = 1. - res.x.sum()
 
-        return f_corr
+        return f_corr.round(12)
 
     def draw_thermal_cycle(self, t, T, n=100, ax=None, **kwargs):
         """
