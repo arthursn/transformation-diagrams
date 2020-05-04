@@ -22,7 +22,7 @@ if __name__ == '__main__':
     parser.add_argument('-Cu', '--Cu', type=float, default=0., help='Copper wt.%%')
     parser.add_argument('-Al', '--Al', type=float, default=0., help='Aluminium wt.%%')
     parser.add_argument('-W', '--W', type=float, default=0., help='Tungsten wt.%%')
-    parser.add_argument('-Tini', '--Tini', type=float, default=900., help='Initial continuous cooling temperature')
+    parser.add_argument('-Tini', '--Tini', type=float, default=900., help='Initial continuous cooling temperature (oC)')
 
     args = parser.parse_args()
 
