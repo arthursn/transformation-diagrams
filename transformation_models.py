@@ -314,8 +314,6 @@ class PhaseTransformation(object):
         """
         cooling_rate : iterable
         """
-        import time
-        t0 = time.time()
         dt = dT/np.array(cooling_rate)
         nt = len(dt) if hasattr(dt, '__len__') else 1
         T = np.arange(Tmax, Tmin, -dT)
