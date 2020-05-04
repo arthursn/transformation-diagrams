@@ -77,7 +77,7 @@ required arguments:
   -phi PHI, --phi PHI   Cooling rate (oC/s; if 0, isothermal) (default: 0.0)
 ```
 
-Please notice that the grain size specified as the ASTM grain size number, defined by the [ASTM E112 standard](https://www.astm.org/Standards/E112.htm). The default value used in the scripts is 7, which correspond to an average diameter of about 30 μm. Use the table below as a reference:
+Please notice that the grain size specified as the ASTM grain size number, defined by the [ASTM E112 standard](https://www.astm.org/Standards/E112.htm). The default value used in the scripts is 7, which corresponds to an average diameter of about 30 μm. Use the table below as a reference:
 
 ![ASTM E112 Table 4](literature/ASTME112-Table4.png)
 
