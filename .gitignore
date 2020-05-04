@@ -2,6 +2,10 @@
 # Created by https://www.gitignore.io/api/matlab,python
 # Edit at https://www.gitignore.io/?templates=matlab,python
 
+### Custom ###
+data.csv
+data.xls
+
 ### MATLAB ###
 # Windows default autosave extension
 *.asv
