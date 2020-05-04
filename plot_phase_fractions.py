@@ -17,7 +17,7 @@ if __name__ == '__main__':
     required_named.add_argument('-t', '--t', type=float, required=True, help='Total time (s)')
     required_named.add_argument('-phi', '--phi', type=float, default=0., help='Cooling rate (oC/s; if 0, isothermal)')
 
-    parser.add_argument('-g', '--gs', type=float, default=6, help='ASTM grain size number')
+    parser.add_argument('-g', '--gs', type=float, default=7, help='ASTM grain size number')
     parser.add_argument('-C', '--C', type=float, default=0., help='Carbon wt.%%')
     parser.add_argument('-Si', '--Si', type=float, default=0., help='Silicon wt.%%')
     parser.add_argument('-Mn', '--Mn', type=float, default=0., help='Manganese wt.%%')

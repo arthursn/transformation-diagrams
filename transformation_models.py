@@ -15,7 +15,7 @@ K = 273.15
 
 def FahrenheitToCelsius(TF):
     """
-    Converts temperature in Fahrenheit to Celcius
+    Converts temperature in Fahrenheit to Celsius
     """
     return (TF - 32.)*5./9.
 
