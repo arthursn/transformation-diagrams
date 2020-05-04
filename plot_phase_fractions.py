@@ -9,11 +9,15 @@ import matplotlib.pyplot as plt
 from transformation_models import Alloy, TransformationDiagrams
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Script for plotting phase fraction curves for a given thermal cycle')
-    parser.add_argument('-Tini', '--Tini', type=float, required=True, help='Initial temperature (oC)')
-    parser.add_argument('-t', '--t', type=float, required=True, help='Total time (s)')
-    parser.add_argument('-phi', '--phi', type=float, default=0., help='Cooling rate (oC/s; if 0, isothermal)')
-    parser.add_argument('-g', '--gs', type=float, default=6, help='Grain size')
+    parser = argparse.ArgumentParser(description='Script for plotting phase fraction curves for a given thermal cycle',
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    
+    required_named = parser.add_argument_group('required arguments')
+    required_named.add_argument('-Tini', '--Tini', type=float, required=True, help='Initial temperature (oC)')
+    required_named.add_argument('-t', '--t', type=float, required=True, help='Total time (s)')
+    required_named.add_argument('-phi', '--phi', type=float, default=0., help='Cooling rate (oC/s; if 0, isothermal)')
+
+    parser.add_argument('-g', '--gs', type=float, default=6, help='ASTM grain size number')
     parser.add_argument('-C', '--C', type=float, default=0., help='Carbon wt.%%')
     parser.add_argument('-Si', '--Si', type=float, default=0., help='Silicon wt.%%')
     parser.add_argument('-Mn', '--Mn', type=float, default=0., help='Manganese wt.%%')
