@@ -57,7 +57,7 @@ if __name__ == '__main__':
         xaxis = 'T'
 
     t_, T_ = [0, t], [Tini, Tini - phi*t]
-    diagrams.draw_thermal_cycle(t_, T_, ax=ax1)
+    diagrams.draw_thermal_cycle(ax1, t_, T_)
     diagrams.plot_phase_fraction(t_, T_, xaxis=xaxis, ax=ax2)
 
     fig.suptitle(ax1.get_title())

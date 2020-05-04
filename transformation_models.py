@@ -13,22 +13,10 @@ R = 8.314459
 K = 273.15
 
 
-def parse_comp(**comp):
-    """
-    Parse a composition dictionary and returns default values if
-    values not set
-    """
-    C = comp.pop('C', 0)
-    Mn = comp.pop('Mn', 0)
-    Si = comp.pop('Si', 0)
-    Ni = comp.pop('Ni', 0)
-    Cr = comp.pop('Cr', 0)
-    Mo = comp.pop('Mo', 0)
-    Co = comp.pop('Co', 0)
-    return C, Mn, Si, Ni, Cr, Mo, Co
-
-
 def FahrenheitToCelsius(TF):
+    """
+    Converts temperature in Fahrenheit to Celcius
+    """
     return (TF - 32.)*5./9.
 
 
@@ -37,7 +25,12 @@ def FC(**comp):
     Function that expresses the effects of the alloying elements on
     on the kinetics of ferrite transformation
     """
-    C, Mn, Si, Ni, Cr, Mo, Co = parse_comp(**comp)
+    C = comp.get('C', 0)
+    Mn = comp.get('Mn', 0)
+    Si = comp.get('Si', 0)
+    Ni = comp.get('Ni', 0)
+    Cr = comp.get('Cr', 0)
+    Mo = comp.get('Mo', 0)
     return np.exp((1.0 + 6.31*C + 1.78*Mn + 0.31*Si + 1.12*Ni + 2.7*Cr + 4.06*Mo))
 
 
@@ -46,7 +39,12 @@ def PC(**comp):
     Function that expresses the effects of the alloying elements on
     on the kinetics of pearlite transformation
     """
-    C, Mn, Si, Ni, Cr, Mo, Co = parse_comp(**comp)
+    C = comp.get('C', 0)
+    Mn = comp.get('Mn', 0)
+    Si = comp.get('Si', 0)
+    Ni = comp.get('Ni', 0)
+    Cr = comp.get('Cr', 0)
+    Mo = comp.get('Mo', 0)
     return np.exp(-4.25 + 4.12*C + 4.36*Mn + 0.44*Si + 1.71*Ni + 3.33*Cr + 5.19*np.sqrt(Mo))
 
 
@@ -55,7 +53,11 @@ def BC(**comp):
     Function that expresses the effects of the alloying elements on
     on the kinetics of bainite transformation
     """
-    C, Mn, Si, Ni, Cr, Mo, Co = parse_comp(**comp)
+    C = comp.get('C', 0)
+    Mn = comp.get('Mn', 0)
+    Ni = comp.get('Ni', 0)
+    Cr = comp.get('Cr', 0)
+    Mo = comp.get('Mo', 0)
     return np.exp(-10.23 + 10.18*C + 0.85*Mn + 0.55*Ni + 0.9*Cr + 0.36*Mo)
 
 
@@ -63,15 +65,22 @@ def Ae1_Grange(**comp):
     """
     Grange's equation for Ae1
     """
-    C, Mn, Si, Ni, Cr, Mo, Co = parse_comp(**comp)
-    return FahrenheitToCelsius(1333 - 25*Mn + 40*Si - 26*Ni - 42*Cr)
+    Mn = comp.get('Mn', 0)
+    Si = comp.get('Si', 0)
+    Ni = comp.get('Ni', 0)
+    Cr = comp.get('Cr', 0)
+    return FahrenheitToCelsius(1333 - 25*Mn + 40*Si - 26*Ni + 42*Cr)
 
 
 def Ae3_Grange(**comp):
     """
     Grange's equation for Ae3
     """
-    C, Mn, Si, Ni, Cr, Mo, Co = parse_comp(**comp)
+    C = comp.get('C', 0)
+    Mn = comp.get('Mn', 0)
+    Si = comp.get('Si', 0)
+    Ni = comp.get('Ni', 0)
+    Cr = comp.get('Cr', 0)
     return FahrenheitToCelsius(1570 - 323*C - 25*Mn + 80*Si - 32*Ni - 3*Cr)
 
 
@@ -79,31 +88,60 @@ def Ae1_Andrews(**comp):
     """
     Andrews' equation for Ae1
     """
-    C, Mn, Si, Ni, Cr, Mo, Co = parse_comp(**comp)
-    return 712 - 17.8*Mn + 20.1*Si - 19.1*Ni + 11.9*Cr + 9.8*Mo
+    Mn = comp.get('Mn', 0)
+    Si = comp.get('Si', 0)
+    Ni = comp.get('Ni', 0)
+    Cr = comp.get('Cr', 0)
+    Mo = comp.get('Mo', 0)
+    W = comp.get('W', 0)
+    As = comp.get('As', 0)
+    return 723 - 16.9*Ni + 29.1*Si + 6.38*W - 10.7*Mn + 16.9*Cr + 290*As
 
 
 def Ae3_Andrews(**comp):
     """
     Andrews' equation for Ae3
     """
-    C, Mn, Si, Ni, Cr, Mo, Co = parse_comp(**comp)
-    return 871 - 254.4*np.sqrt(C) + 51.7*Si - 14.2*Ni
+    C = comp.get('C', 0)
+    Mn = comp.get('Mn', 0)
+    Si = comp.get('Si', 0)
+    Ni = comp.get('Ni', 0)
+    Cr = comp.get('Cr', 0)
+    Mo = comp.get('Mo', 0)
+    V = comp.get('V', 0)
+    W = comp.get('W', 0)
+    Cu = comp.get('Cu', 0)
+    P = comp.get('P', 0)
+    Al = comp.get('Al', 0)
+    As = comp.get('As', 0)
+    Ti = comp.get('Ti', 0)
+    return 910 - 203*np.sqrt(C) + 44.7*Si - 15.2*Ni + 31.5*Mo + 104*V + 13.1*W - \
+        30.0*Mn + 11.0*Cr + 20.0*Cu - 700*P - 400*Al - 120*As - 400*Ti
 
 
 def Bs_Li(**comp):
     """
-    Bs calculation from Li's work
+    Bainite start calculation from Li's work
     """
-    C, Mn, Si, Ni, Cr, Mo, Co = parse_comp(**comp)
+    C = comp.get('C', 0)
+    Mn = comp.get('Mn', 0)
+    Ni = comp.get('Ni', 0)
+    Cr = comp.get('Cr', 0)
+    Mo = comp.get('Mo', 0)
     return 637 - 58*C - 35*Mn - 15*Ni - 34*Cr - 41*Mo
 
 
 def Bs_VanBohemen(**comp):
     """
+    Bainite start calculation from Van Bohemen's work
     [1] S.M.C. van Bohemen, Mater. Sci. Technol. 28 (2012) 487–495.
     """
-    C, Mn, Si, Ni, Cr, Mo, Co = parse_comp(**comp)
+    C = comp.get('C', 0)
+    Mn = comp.get('Mn', 0)
+    Si = comp.get('Si', 0)
+    Ni = comp.get('Ni', 0)
+    Cr = comp.get('Cr', 0)
+    Mo = comp.get('Mo', 0)
     return 839 - (86*Mn + 23*Si + 67*Cr + 33*Ni + 75*Mo) - 270*(1 - np.exp(-1.33*C))
 
 
@@ -111,15 +149,41 @@ def Ms_Andrews(**comp):
     """
     Andrews' equation for Ms
     """
-    C, Mn, Si, Ni, Cr, Mo, Co = parse_comp(**comp)
+    C = comp.get('C', 0)
+    Mn = comp.get('Mn', 0)
+    Si = comp.get('Si', 0)
+    Ni = comp.get('Ni', 0)
+    Cr = comp.get('Cr', 0)
+    Mo = comp.get('Mo', 0)
+    Co = comp.get('Co', 0)
     return 539 - 423*C - 30.4*Mn - 17.7*Ni - 12.1*Cr - 7.5*Mo + 10*Co - 7.5*Si
+
+
+def alpha_mart_VanBohemen(**comp):
+    """
+    Martensite transformation rate constant
+    [1] S.M.C. van Bohemen, Mater. Sci. Technol. 28 (2012) 487–495.
+    """
+    C = comp.get('C', 0)
+    Mn = comp.get('Mn', 0)
+    Si = comp.get('Si', 0)
+    Ni = comp.get('Ni', 0)
+    Cr = comp.get('Cr', 0)
+    Mo = comp.get('Mo', 0)
+    return 1e-3*(27.2 - (0.14*Mn + 0.21*Si + 0.11*Cr + 0.08*Ni + 0.05*Mo) - 19.8*(1-np.exp(-1.56*C)))
 
 
 def Ms_VanBohemen(**comp):
     """
+    Martensite start temperature
     [1] S.M.C. van Bohemen, Mater. Sci. Technol. 28 (2012) 487–495.
     """
-    C, Mn, Si, Ni, Cr, Mo, Co = parse_comp(**comp)
+    C = comp.get('C', 0)
+    Mn = comp.get('Mn', 0)
+    Si = comp.get('Si', 0)
+    Ni = comp.get('Ni', 0)
+    Cr = comp.get('Cr', 0)
+    Mo = comp.get('Mo', 0)
     return 565 - (31*Mn + 13*Si + 10*Cr + 18*Ni + 12*Mo) - 600*(1-np.exp(-0.96*C))
 
 
@@ -135,21 +199,26 @@ class Alloy:
         # Alloy composition
         self.w = w
         # Main elements
-        self.C, self.Mn, self.Si, self.Ni, self.Cr, self.Mo, self.Co = parse_comp(**w)
+        self.C = w.get('C', 0)
+        self.Mn = w.get('Mn', 0)
+        self.Si = w.get('Si', 0)
+        self.Ni = w.get('Ni', 0)
+        self.Cr = w.get('Cr', 0)
+        self.Mo = w.get('Mo', 0)
+        self.Co = w.get('Co', 0)
 
         self.FC = FC(**w)
         self.PC = PC(**w)
         self.BC = BC(**w)
-        # self.Ae3 = Ae3_Andrews(**w)
-        # self.Ae1 = Ae1_Andrews(**w)
-        self.Ae3 = Ae3_Grange(**w)
-        self.Ae1 = Ae1_Grange(**w)
-        # self.Ae3 = 970
-        # self.Ae1 = 590
+        self.Ae3 = Ae3_Andrews(**w)
+        self.Ae1 = Ae1_Andrews(**w)
+        # self.Ae3 = Ae3_Grange(**w)
+        # self.Ae1 = Ae1_Grange(**w)
         self.Bs = Bs_Li(**w)
         # self.Ms = Ms_Andrews(**w)
         # self.Bs = Bs_VanBohemen(**w)
         self.Ms = Ms_VanBohemen(**w)
+        self.alpha_mart = alpha_mart_VanBohemen(**w)
 
     def format_composition(self, vmin=0):
         fmt = []
@@ -305,18 +374,67 @@ class PhaseTransformation(object):
         pass
 
     def get_transformation_factor(self, T):
+        """
+        Calculates the transformation factor for a given temperature T
+
+        Parameters
+        ----------
+        T : float or iterable
+            Temperature. It can be provided as an array
+
+        Returns
+        -------
+        F : float or iterable
+            Transformation factor with same shape as T
+        """
         return self.comp_factor/(2**(self.n1*self.alloy.gs)*(self.Ts - T)**self.n2*np.exp(-self.Q/(R*(T + K))))
 
     def get_transformation_time(self, T, f):
+        """
+        Calculates the time necessary for the material to transform to a
+        fraction f at a temperature T
+
+        Parameters
+        ----------
+        T : float or iterable
+            Temperature. It can be provided as an array
+        f : float or iterable
+            Transformed fraction. If iterable, has to have the same shape
+            as T
+
+        Returns
+        -------
+        t : float or iterable
+            Transformation time with same shape as T
+        """
         return S(f)*self.get_transformation_factor(T)
 
-    def get_transformation_temperature(self, Tmax, Tmin, cooling_rate, f, dT=1.0):
+    def get_transformation_temperature(self, Tini, Tfin, cooling_rate, f, dT=1.0):
         """
-        cooling_rate : iterable
+        Calculates the temperature for the material to transform to a 
+        fraction f during the cooling from Tini to Tfin at a cooling rate 
+        cooling_rate
+
+        Parameters
+        ----------
+        Tini : float
+            Initial temperature
+        Tfin : float
+            Final temperature
+        cooling_rate : float or iterable
+            Cooling rate(s). It can be provided as an array
+        f : float or iterable
+            Transformed fraction. If iterable, has to have the same shape
+            as cooling_rate
+
+        Returns
+        -------
+        T : float or iterable
+            Transformation temperature with same shape as cooling_rate
         """
         dt = dT/np.array(cooling_rate)
         nt = len(dt) if hasattr(dt, '__len__') else 1
-        T = np.arange(Tmax, Tmin, -dT)
+        T = np.arange(Tini, Tfin, -dT)
         nucleation_time = np.full((nt, len(T)), 0, dtype=float)
 
         filtr = T < self.Ts
@@ -337,7 +455,24 @@ class PhaseTransformation(object):
 
     def get_transformed_fraction(self, t, T, n=1000):
         """
-        t, T : iterables
+        Calculates the transformed fraction for a given thermal cycle T(t)
+
+        Parameters
+        ----------
+        t : iterable
+            Time
+        T : iterable
+            Temperatures at the instants of time t
+        n : int (optional)
+            Number of points at which the transformed fractions are 
+            calculated
+            Default: 1000
+
+        Returns
+        -------
+        t, T, f : tuple
+            Tuple with arrays time, temperature, phase fraction evaluated
+            at n points
         """
         if len(t) > 3:
             # Fits T(t) by spline
@@ -427,13 +562,27 @@ class Martensite:
         self.alloy = alloy
         self.Ts = self.alloy.Ms
 
-        C, Mn, Si, Ni, Cr, Mo, Co = parse_comp(**self.alloy.w)
-        self.alloy.alpha = 1e-3*(27.2 - (0.14*Mn + 0.21*Si + 0.11*Cr + 0.08*Ni + 0.05*Mo) - 19.8*(1-np.exp(-1.56*C)))
-
     def get_transformed_fraction(self, t, T, n=1000):
         """
-        t, T : iterables
-        Koistinen-Marburger equation
+        Calculates the transformed martensite fraction for a given thermal 
+        cycle T(t) using the Koistinen-Marburger equation
+
+        Parameters
+        ----------
+        t : iterable
+            Time
+        T : iterable
+            Temperatures at the instants of time t
+        n : int (optional)
+            Number of points at which the transformed fractions are 
+            calculated
+            Default: 1000
+
+        Returns
+        -------
+        t, T, f : tuple
+            Tuple with arrays time, temperature, phase fraction evaluated
+            at n points
         """
         if len(t) > 3:
             # Fits T(t) by spline
@@ -448,11 +597,15 @@ class Martensite:
 
         filtr = T < self.alloy.Ms
         if np.any(filtr):
-            f[filtr] = 1 - np.exp(-self.alloy.alpha*(self.alloy.Ms - T[filtr]))
+            f[filtr] = 1 - np.exp(-self.alloy.alpha_mart*(self.alloy.Ms - T[filtr]))
         return t, T, f
 
 
 class TransformationDiagrams:
+    """
+    Transformation diagrams class
+    """
+
     colors_dict = dict(ferrite='#1f77b4', pearlite='#ff7f0e', bainite='#2ca02c',
                        martensite='#d62728', austenite='#9467bd')
     columns_label_dict = dict(t='Time (s)', T=u'Temperature (°C)',
@@ -469,8 +622,27 @@ class TransformationDiagrams:
 
     def get_transformed_fraction(self, t, T, n=1000):
         """
-        Get transformation curves for a given T(t) thermal cycle
+        Calculates transformation curves for a given T(t) thermal cycle
+
+        Parameters
+        ----------
+        t : iterable
+            Time
+        T : iterable
+            Temperatures at the instants of time t
+        n : int (optional)
+            Number of points at which the transformed fractions are 
+            calculated
+            Default: 1000
+
+        Returns
+        -------
+        f : pandas DataFrame
+            DataFrame containing the time, temperature, and phase fractions
+            of ferrite, pearlite, bainite, martensite, and austenite at n
+            points 
         """
+        # Uncorrected phase fractions
         t, T, f_ferr = self.ferrite.get_transformed_fraction(t, T, n)
         t, T, f_pear = self.pearlite.get_transformed_fraction(t, T, n)
         t, T, f_bain = self.bainite.get_transformed_fraction(t, T, n)
@@ -511,6 +683,7 @@ class TransformationDiagrams:
             x0 = [f_corr.loc[i-1, 'ferrite'], f_corr.loc[i-1, 'pearlite'],
                   f_corr.loc[i-1, 'bainite'], f_corr.loc[i-1, 'martensite']]
 
+            # Solves system of non-linear equations to get corrected phase fractions
             res = root(lambda x: [f1(i, *x), f2(i, *x), f3(i, *x), f4(i, *x)], x0=x0)
 
             f_corr.loc[i, 'ferrite'] = res.x[0]
@@ -521,14 +694,28 @@ class TransformationDiagrams:
 
         return f_corr.round(12)
 
-    def draw_thermal_cycle(self, t, T, n=100, ax=None, **kwargs):
+    def draw_thermal_cycle(self, ax, t, T, n=100, **kwargs):
         """
         Draw thermal cycle (cooling curve) over AxesSubplot object
+
+        Parameters
+        ----------
+        ax : AxesSubplot object
+            Axis where to draw the thermal cycle curve
+        t : iterable
+            Time
+        T : iterable
+            Temperatures at the instants of time t
+        n : int (optional)
+            Number of points at which the T(t) points are evaluated by
+            interpolation
+            Default: 100
+
+        Returns
+        -------
+        line : Line2D object
+            Line2D object corresponding to drawn curve
         """
-        if ax is None:
-            fig, ax = plt.subplots()
-        else:
-            fig = ax.get_figure()
 
         if len(t) > 3:
             # Fits T(t) by spline
@@ -548,6 +735,25 @@ class TransformationDiagrams:
     def TTT(self, fs=1e-2, ff=.99, ax=None, **kwargs):
         """
         Plot TTT diagram
+
+        Parameters
+        ----------
+        fs : float (optional)
+            Transformation start phase fraction
+            Default: 1e-2 (1%)
+        fs : float (optional)
+            Transformation finish phase fraction
+            Default: .99 (99%)
+        ax : AxesSubplot object (optional)
+            Axis where to plot the TTT curve. If None, then a new axis is
+            created
+            Default: None
+        **kwargs :
+            Optional arguments passed to ax.plot(*args, **kwargs)
+
+        Returns
+        -------
+        ax : AxesSubplot object
         """
         if ax is None:
             fig, ax = plt.subplots(figsize=(6, 6))
@@ -575,6 +781,7 @@ class TransformationDiagrams:
         ax.plot(ts, T, color=self.colors_dict['bainite'], label='Bainite {:g}%'.format(100*fs), **kwargs)
         ax.plot(tf, T, color=self.colors_dict['bainite'], ls='--', label='Bainite {:g}%'.format(100*ff), **kwargs)
 
+        # Draws Bs and Ms lines
         ax.axhline(self.alloy.Bs, color=self.colors_dict['bainite'], ls=':', label='Bs')
         ax.axhline(self.alloy.Ms, color=self.colors_dict['martensite'], label='Ms')
 
@@ -591,6 +798,25 @@ class TransformationDiagrams:
     def CCT(self, Tini=900, fs=1e-2, ff=.99, cooling_rates=10**np.linspace(-4, 4, 320), ax=None, **kwargs):
         """
         Plot CCT diagram
+
+        Parameters
+        ----------
+        fs : float (optional)
+            Transformation start phase fraction
+            Default: 1e-2 (1%)
+        fs : float (optional)
+            Transformation finish phase fraction
+            Default: .99 (99%)
+        ax : AxesSubplot object (optional)
+            Axis where to plot the TTT curve. If None, then a new axis is
+            created
+            Default: None
+        **kwargs :
+            Optional arguments passed to ax.plot(*args, **kwargs)
+
+        Returns
+        -------
+        ax : AxesSubplot object
         """
         if ax is None:
             fig, ax = plt.subplots(figsize=(6, 6))
@@ -598,7 +824,7 @@ class TransformationDiagrams:
             fig = ax.get_figure()
 
         cooling_rates = np.array(cooling_rates)
-        draw_cooling = kwargs.pop('draw_cooling', True)
+        draw_cooling = kwargs.get('draw_cooling', True)
 
         # Ferrite
         Ts = self.ferrite.get_transformation_temperature(Tini, self.alloy.Bs, cooling_rates, fs)  # start
@@ -645,6 +871,33 @@ class TransformationDiagrams:
         return ax
 
     def plot_phase_fraction(self, t, T, n=1000, xaxis='t', ax=None, **kwargs):
+        """
+        Plot phase fractions for a given thermal cycle T(t)
+
+        Parameters
+        ----------
+        t : iterable
+            Time
+        T : iterable
+            Temperatures at the instants of time t
+        n : int (optional)
+            Number of points at which the T(t) points are evaluated by
+            interpolation
+            Default: 1000
+        xaxis : string (optional)
+            Variable to be represented on the x-axis. Possible values are:
+            'index', t', 'T', 'ferrite', 'pearlite', 'bainite', 'martensite',
+            and 'austenite'
+            Default: 't'
+        ax : AxesSubplot object (optional)
+            Axis where to plot the phase fraction curves. If None, then a 
+            new axis is created
+            Default: None
+
+        Returns
+        -------
+        ax : AxesSubplot object
+        """
         if ax is None:
             fig, ax = plt.subplots()
         else:
@@ -677,49 +930,3 @@ class TransformationDiagrams:
         ax.legend()
 
         return ax
-
-
-if __name__ == '__main__':
-    # Defines alloy (grain size gs and composition)
-    alloy = Alloy(gs=7, C=0.37, Mn=0.77, Si=0.15, Ni=0.04, Cr=0.98, Mo=0.21)
-
-    # Initializes diagrams object
-    diagrams = TransformationDiagrams(alloy)
-
-    # Example 1: Plot TTT and CCT diagrams
-
-    fig1, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
-    fig1.subplots_adjust(wspace=.2)
-
-    diagrams.TTT(ax=ax1)
-    ax1.set_xlim(1e-2, 1e8)
-    ax1.set_ylim(300, 1000)
-
-    diagrams.CCT(ax=ax2)
-    ax2.set_xlim(1e-2, 1e8)
-    ax2.set_ylim(300, 1000)
-
-    fig1.suptitle(ax1.get_title())
-    ax1.set_title('')
-    ax2.set_title('')
-
-    # Example 2: Plot CCT diagram and transformed fraction
-
-    fig2, (ax3, ax4) = plt.subplots(1, 2, figsize=(12, 6))
-    fig2.subplots_adjust(wspace=.2)
-
-    # Plot CCT diagram
-    diagrams.CCT(Tini=1000, ax=ax3)
-
-    # Chooses a thermal cycle (continuous cooling from 1000 to 0 oC in
-    # 2000 s), draws cooling curve in the CCT and plots phase fraction
-    t, T = [0, 2000], [1000, 0]
-    # t, T = [0, 10000], [700, 700]
-    diagrams.draw_thermal_cycle(t, T, ax=ax3)
-    diagrams.plot_phase_fraction(t, T, xaxis='T', ax=ax4)
-
-    fig2.suptitle(ax3.get_title())
-    ax3.set_title('')
-    ax4.set_title('')
-
-    plt.show()

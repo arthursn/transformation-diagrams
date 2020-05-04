@@ -85,12 +85,12 @@ Plot TTT and CCT diagrams:
 
 ```bash
 # Run directly from the shell
-python3 plot_diagrams.py -C 0.1 -Mn 1
+python3 plot_diagrams.py -C 0.1 -Mn 1 -Tini 900
 ```
 
 ```python
 # Run using jupyter or ipython (e.g., if you're running Spyder)
-%run plot_diagrams.py -C 0.1 -Mn 1
+%run plot_diagrams.py -C 0.1 -Mn 1 -Tini 900
 ```
 
 This will prompt a matplotlib window with the following TTT and CCT diagrams:

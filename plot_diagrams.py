@@ -41,9 +41,11 @@ if __name__ == '__main__':
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
     fig.subplots_adjust(wspace=.2)
 
+    # Plot TTT
     diagrams.TTT(ax=ax1)
     ax1.set_ylim(alloy.Ms - 200, Tini + 50)
 
+    # Plot CCT
     diagrams.CCT(Tini=Tini, ax=ax2)
     ax2.set_ylim(alloy.Ms - 200, Tini + 50)
 

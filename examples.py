@@ -63,7 +63,7 @@ if __name__ == '__main__':
     diagrams.CCT(Tini=1000, ax=ax3)
 
     # Same thermal cycle as from example 2
-    diagrams.draw_thermal_cycle(t, T, ax=ax3)
+    diagrams.draw_thermal_cycle(ax3, t, T)
     diagrams.plot_phase_fraction(t, T, xaxis='T', ax=ax4)
 
     fig2.suptitle(ax3.get_title())
