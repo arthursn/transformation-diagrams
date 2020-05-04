@@ -6,6 +6,8 @@ Feel free to edit the code to, for instance, automatize the generation of diagra
 
 The repository also contains scripts for easy plotting of phase diagrams and phase fraction curves: [`plot_diagrams.py`](https://github.com/arthursn/transformation-diagrams/blob/master/plot_diagrams.py) and [`plot_phase_fractions.py`](https://github.com/arthursn/transformation-diagrams/blob/master/plot_phase_fractions.py).
 
+> **DISCLAIMER**: Calculation of phase fractions doesn't take into account how a phase transformation affect the austenite composition and therefore might affect the subsequent phase transformations. Use this model at your own risk.
+
 # Dependencies
 
 The scripts run in python 2 (>= 2.7) and python 3 (>= 3.5). However, since support for python 2 has reached its end of life in January 2020, it is recommended to run the scripts using python 3. It uses the non standard python libraries `argparse`, `numpy`, `matplotlib`, `pandas`, and `scipy`. In most modern python distributions these requirements should be already met in the native instalation, for example [Anaconda](https://www.anaconda.com/products/individual). Otherwise, you can install dependencies from the [Python Package Index](https://pypi.org/) using the [`pip`](https://pip.pypa.io/en/stable/installing/) command.
@@ -96,8 +98,6 @@ This will prompt a matplotlib window with the following TTT and CCT diagrams:
 ![Fe-1%Mn-0.1%Mn diagrams](img/Fe-1Mn-01C_diagrams.png)
 
 Plot phase fraction for a thermal cycle specified by `-Tini`, `-t`, and `-phi` parameters:
-
-> **DISCLAIMER**: Calculation of phase fractions doesn't take into account how a phase transformation affect the austenite composition and therefore might affect the subsequent phase transformations. Use this model at your own risk.
 
 ```bash
 # Run directly from the shell
