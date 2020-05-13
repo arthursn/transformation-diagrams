@@ -15,10 +15,6 @@ if __name__ == '__main__':
     # Initializes diagrams object
     diagrams = TransformationDiagrams(alloy)
 
-    # Initialized plot window
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
-    fig.subplots_adjust(wspace=.2)
-
     Tini = 900.  # initial temperature
     Tfin = 25.  # final temperature
     cooling_rates = [1000, 300, 100, 30, 10, 3, 1, 3e-1,
@@ -33,17 +29,24 @@ if __name__ == '__main__':
     for phi in cooling_rates:
         print('Calculating phase fractions for phi={:g} oC/s...'.format(phi))
 
-        total_time = (Tini - Tfin)/phi
+        total_time = (Tini - Tfin)/phi  # Total heat treatment time
+        # Gets phase fractions and hardness
         f = diagrams.get_transformed_fraction([0, total_time], [Tini, Tfin])
 
         f_fin = f.iloc[-1]  # f at Tfin
 
+        # Appends phase fractions and hardness at Tfin
         f_ferr.append(f_fin['pearlite'])
         f_pear.append(f_fin['ferrite'])
         f_bain.append(f_fin['bainite'])
         f_mart.append(f_fin['martensite'])
         Hv.append(f_fin['Hv'])
 
+    # Initializes plot window
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
+    fig.subplots_adjust(wspace=.2)
+
+    # Plot
     ax1.plot(cooling_rates, f_ferr, label='Pearlite')
     ax1.plot(cooling_rates, f_pear, label='Ferrite')
     ax1.plot(cooling_rates, f_bain, label='Bainite')
@@ -57,7 +60,7 @@ if __name__ == '__main__':
     ax2.plot(cooling_rates, Hv)
     ax2.set_xlabel(u'Cooling rate (°C/s)')
     ax2.set_ylabel(u'Vickers Hardness')
-    ax2.set_title(u'Hardness at {:g} °C'.format(Tfin))
+    ax2.set_title(u'Hardness for phase fractions at {:g} °C'.format(Tfin))
     ax2.set_xscale('log')
 
     fig.suptitle(alloy.format_composition())

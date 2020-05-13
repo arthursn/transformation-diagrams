@@ -999,8 +999,9 @@ class TransformationDiagrams:
             except ValueError:
                 T_ref, Hv_ref = f.iloc[-1]['T'], f.iloc[-1]['Hv']
 
-            ax.text(.98, .9, u'Hardness at {:.1f} °C: {:.0f} HV'.format(T_ref, Hv_ref),
-                    transform=ax.transAxes, ha='right', va='top')
+            ax.text(.95, .95, u'Hardness for phase fractions at {:.1f} °C: {:.0f} HV'.format(T_ref, Hv_ref),
+                    transform=ax.transAxes, ha='right', va='top',
+                    bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'))
 
         ax.set_xlabel(self.columns_label_dict[xaxis])
         ax.set_ylabel('Phase fraction')
