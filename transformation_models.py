@@ -159,7 +159,7 @@ def Ms_Andrews(**comp):
     return 539 - 423*C - 30.4*Mn - 17.7*Ni - 12.1*Cr - 7.5*Mo + 10*Co - 7.5*Si
 
 
-def alpha_mart_VanBohemen(**comp):
+def alpha_martensite_VanBohemen(**comp):
     """
     Martensite transformation rate constant
     [1] S.M.C. van Bohemen, Mater. Sci. Technol. 28 (2012) 487–495.
@@ -186,6 +186,46 @@ def Ms_VanBohemen(**comp):
     Mo = comp.get('Mo', 0)
     return 565 - (31*Mn + 13*Si + 10*Cr + 18*Ni + 12*Mo) - 600*(1-np.exp(-0.96*C))
 
+def Hv_martensite(phi700, **comp):
+    """
+    Martensite Vickers hardness empirical equation
+    (Maynier et al.)
+    """
+    C = comp.get('C', 0)
+    Mn = comp.get('Mn', 0)
+    Si = comp.get('Si', 0)
+    Ni = comp.get('Ni', 0)
+    Cr = comp.get('Cr', 0)
+    return 127 + 949*C + 27*Si + 11*Mn + 8*Ni + 16*Cr + 21*np.log10(phi700*3600)
+
+def Hv_bainite(phi700, **comp):
+    """
+    Bainite Vickers hardness empirical equation
+    (Maynier et al.)
+    """
+    C = comp.get('C', 0)
+    Mn = comp.get('Mn', 0)
+    Si = comp.get('Si', 0)
+    Ni = comp.get('Ni', 0)
+    Cr = comp.get('Cr', 0)
+    Mo = comp.get('Mo', 0)
+    return -323 + 185*C + 330*Si + 153*Mn + 65*Ni + 144*Cr + 191*Mo + \
+        (89 + 53*C - 55*Si - 22*Mn - 10*Ni - 20*Cr - 33*Mo)*np.log10(phi700*3600)
+
+def Hv_ferrite_pearlite(phi700, **comp):
+    """
+    Ferrite + pearlite Vickers hardness empirical equation
+    (Maynier et al.)
+    """
+    C = comp.get('C', 0)
+    Mn = comp.get('Mn', 0)
+    Si = comp.get('Si', 0)
+    Ni = comp.get('Ni', 0)
+    Cr = comp.get('Cr', 0)
+    Mo = comp.get('Mo', 0)
+    V = comp.get('V', 0)
+    return 42 + 223*C + 53*Si + 30*Mn + 12.6*Ni + 7*Cr + 19*Mo + \
+        (10 - 19*Si + 4*Ni + 8*Cr + 130*V)*np.log10(phi700*3600)
 
 class Alloy:
     """
@@ -218,7 +258,12 @@ class Alloy:
         # self.Ms = Ms_Andrews(**w)
         # self.Bs = Bs_VanBohemen(**w)
         self.Ms = Ms_VanBohemen(**w)
-        self.alpha_mart = alpha_mart_VanBohemen(**w)
+        self.alpha_martensite = alpha_martensite_VanBohemen(**w)
+
+        # Hardness
+        self.Hv_martensite = lambda phi700: Hv_martensite(phi700, **w)
+        self.Hv_bainite = lambda phi700: Hv_bainite(phi700, **w)
+        self.Hv_ferrite_pearlite = lambda phi700: Hv_ferrite_pearlite(phi700, **w)
 
     def format_composition(self, vmin=0):
         fmt = []
@@ -358,7 +403,7 @@ class PhaseTransformation(object):
         self.alloy = alloy
         self.initialize()
         # Check for compulsory object attributes
-        for var in ['comp_factor', 'Ts', 'Tf']:
+        for var in ['comp_factor', 'Ts', 'Tf', 'Hv']:
             if not hasattr(self, var):
                 raise NotImplementedError('Object {} lacks required `{}` attribute'.format(self, var))
 
@@ -523,6 +568,7 @@ class Ferrite(PhaseTransformation):
         self.comp_factor = self.alloy.FC  # composition factor for calculating transformation time
         self.Ts = self.alloy.Ae3  # transformation start temperature
         self.Tf = self.alloy.Bs  # transformation finish temperature
+        self.Hv = self.alloy.Hv_ferrite_pearlite
 
 
 class Pearlite(PhaseTransformation):
@@ -537,6 +583,7 @@ class Pearlite(PhaseTransformation):
         self.comp_factor = self.alloy.PC  # composition factor for calculating transformation time
         self.Ts = self.alloy.Ae1  # transformation start temperature
         self.Tf = self.alloy.Bs  # transformation finish temperature
+        self.Hv = self.alloy.Hv_ferrite_pearlite
 
 
 class Bainite(PhaseTransformation):
@@ -551,6 +598,7 @@ class Bainite(PhaseTransformation):
         self.comp_factor = self.alloy.BC  # composition factor for calculating transformation time
         self.Ts = self.alloy.Bs  # transformation start temperature
         self.Tf = self.alloy.Ms  # transformation finish temperature
+        self.Hv = self.alloy.Hv_bainite
 
 
 class Martensite:
@@ -561,6 +609,7 @@ class Martensite:
     def __init__(self, alloy):
         self.alloy = alloy
         self.Ts = self.alloy.Ms
+        self.Hv = self.alloy.Hv_martensite
 
     def get_transformed_fraction(self, t, T, n=1000):
         """
@@ -597,7 +646,7 @@ class Martensite:
 
         filtr = T < self.alloy.Ms
         if np.any(filtr):
-            f[filtr] = 1 - np.exp(-self.alloy.alpha_mart*(self.alloy.Ms - T[filtr]))
+            f[filtr] = 1 - np.exp(-self.alloy.alpha_martensite*(self.alloy.Ms - T[filtr]))
         return t, T, f
 
 
@@ -640,12 +689,12 @@ class TransformationDiagrams:
         f : pandas DataFrame
             DataFrame containing the time, temperature, and phase fractions
             of ferrite, pearlite, bainite, martensite, and austenite at n
-            points 
+            points, and also the Vickers hardness for each data point
         """
         # Uncorrected phase fractions
-        t, T, f_ferr = self.ferrite.get_transformed_fraction(t, T, n)
-        t, T, f_pear = self.pearlite.get_transformed_fraction(t, T, n)
-        t, T, f_bain = self.bainite.get_transformed_fraction(t, T, n)
+        _, _, f_ferr = self.ferrite.get_transformed_fraction(t, T, n)
+        _, _, f_pear = self.pearlite.get_transformed_fraction(t, T, n)
+        _, _, f_bain = self.bainite.get_transformed_fraction(t, T, n)
         t, T, f_mart = self.martensite.get_transformed_fraction(t, T, n)
 
         f_ferr_inc = np.diff(f_ferr, prepend=0)
@@ -653,46 +702,64 @@ class TransformationDiagrams:
         f_bain_inc = np.diff(f_bain, prepend=0)
         f_mart_inc = np.diff(f_mart, prepend=0)
 
-        f_corr = pd.DataFrame(columns=['t', 'T', 'ferrite', 'pearlite', 'bainite', 'martensite', 'austenite'])
-        f_corr['t'] = t
-        f_corr['T'] = T
-        f_corr.fillna(0, inplace=True)
-        f_corr.loc[0, 'ferrite'] = f_ferr[0]
-        f_corr.loc[0, 'pearlite'] = f_pear[0]
-        f_corr.loc[0, 'bainite'] = f_bain[0]
-        f_corr.loc[0, 'martensite'] = f_mart[0]
-        f_corr.loc[0, 'austenite'] = 1. - f_ferr[0] - f_pear[0] - f_bain[0] - f_mart[0]
+        f = pd.DataFrame(columns=['t', 'T', 'ferrite', 'pearlite', 'bainite', 'martensite', 'austenite'])
+        f['t'] = t
+        f['T'] = T
+        f.fillna(0, inplace=True)
+        f.loc[0, 'ferrite'] = f_ferr[0]
+        f.loc[0, 'pearlite'] = f_pear[0]
+        f.loc[0, 'bainite'] = f_bain[0]
+        f.loc[0, 'martensite'] = f_mart[0]
+        f.loc[0, 'austenite'] = 1. - f_ferr[0] - f_pear[0] - f_bain[0] - f_mart[0]
 
         def f1(i, x, y, z, w):
             if f_ferr[i] < 1:
-                return f_corr.loc[i-1, 'ferrite'] + f_ferr_inc[i]*(1 - x - y - z - w)/(1 - f_ferr[i]) - x
+                return f.loc[i-1, 'ferrite'] + f_ferr_inc[i]*(1 - x - y - z - w)/(1 - f_ferr[i]) - x
             else:
-                return f_corr.loc[i-1, 'ferrite'] + f_ferr_inc[i]*(1 - y - z - w) - x
+                return f.loc[i-1, 'ferrite'] + f_ferr_inc[i]*(1 - y - z - w) - x
 
         def f2(i, x, y, z, w):
             if f_pear[i] < 1:
-                return f_corr.loc[i-1, 'pearlite'] + f_pear_inc[i]*(1 - x - y - z - w)/(1 - f_pear[i]) - y
+                return f.loc[i-1, 'pearlite'] + f_pear_inc[i]*(1 - x - y - z - w)/(1 - f_pear[i]) - y
             else:
-                return f_corr.loc[i-1, 'pearlite'] + f_pear_inc[i]*(1 - x - z - w) - y
+                return f.loc[i-1, 'pearlite'] + f_pear_inc[i]*(1 - x - z - w) - y
 
-        def f3(i, x, y, z, w): return f_corr.loc[i-1, 'bainite'] + f_bain_inc[i]*(1 - x - y - w) - z
+        def f3(i, x, y, z, w): return f.loc[i-1, 'bainite'] + f_bain_inc[i]*(1 - x - y - w) - z
 
-        def f4(i, x, y, z, w): return f_corr.loc[i-1, 'martensite'] + f_mart_inc[i]*(1 - x - y - z) - w
+        def f4(i, x, y, z, w): return f.loc[i-1, 'martensite'] + f_mart_inc[i]*(1 - x - y - z) - w
 
-        for i in range(len(f_corr))[1:]:
-            x0 = [f_corr.loc[i-1, 'ferrite'], f_corr.loc[i-1, 'pearlite'],
-                  f_corr.loc[i-1, 'bainite'], f_corr.loc[i-1, 'martensite']]
+        for i in range(len(f))[1:]:
+            x0 = [f.loc[i-1, 'ferrite'], f.loc[i-1, 'pearlite'],
+                  f.loc[i-1, 'bainite'], f.loc[i-1, 'martensite']]
 
             # Solves system of non-linear equations to get corrected phase fractions
             res = root(lambda x: [f1(i, *x), f2(i, *x), f3(i, *x), f4(i, *x)], x0=x0)
 
-            f_corr.loc[i, 'ferrite'] = res.x[0]
-            f_corr.loc[i, 'pearlite'] = res.x[1]
-            f_corr.loc[i, 'bainite'] = res.x[2]
-            f_corr.loc[i, 'martensite'] = res.x[3]
-            f_corr.loc[i, 'austenite'] = 1. - res.x.sum()
+            f.loc[i, 'ferrite'] = res.x[0]
+            f.loc[i, 'pearlite'] = res.x[1]
+            f.loc[i, 'bainite'] = res.x[2]
+            f.loc[i, 'martensite'] = res.x[3]
+            f.loc[i, 'austenite'] = 1. - res.x.sum()
 
-        return f_corr.round(12)
+        phi700 = None
+
+        try:
+            T2t = interp1d(T, t)
+            # Gets cooling rate at 700 oC
+            phi700 = 2./(T2t(699.) - T2t(701.))
+            if phi700 == 0:
+                phi700 = None
+        except ValueError:
+            # This might happen for isothermal heat treatments 
+            pass
+
+        if phi700 is not None:
+            f['Hv'] = f['martensite']*self.martensite.Hv(phi700) + f['bainite']*self.bainite.Hv(phi700) + \
+                    (f['ferrite'] + f['pearlite'])*self.ferrite.Hv(phi700)
+        else:
+            f['Hv'] = np.nan
+
+        return f.round(12)
 
     def draw_thermal_cycle(self, ax, t, T, n=100, **kwargs):
         """
@@ -924,6 +991,16 @@ class TransformationDiagrams:
             ax.plot(f[xaxis], f['martensite'], color=self.colors_dict['martensite'], label='Martensite')
         if f['austenite'].max() > 0:
             ax.plot(f[xaxis], f['austenite'], color=self.colors_dict['austenite'], label='Austenite')
+
+        if not np.isnan(f.iloc[-1]['Hv']):
+            T_ref = 25;
+            try:
+                Hv_ref = interp1d(f['T'], f['Hv'])(T_ref)
+            except ValueError:
+                T_ref, Hv_ref = f.iloc[-1]['T'], f.iloc[-1]['Hv']
+
+            ax.text(.98, .9, u'Hardness at {:.1f} °C: {:.0f} HV'.format(T_ref, Hv_ref),
+                    transform=ax.transAxes, ha='right', va='top')
 
         ax.set_xlabel(self.columns_label_dict[xaxis])
         ax.set_ylabel('Phase fraction')
