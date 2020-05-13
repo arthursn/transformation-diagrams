@@ -36,8 +36,8 @@ if __name__ == '__main__':
         f_fin = f.iloc[-1]  # f at Tfin
 
         # Appends phase fractions and hardness at Tfin
-        f_ferr.append(f_fin['pearlite'])
-        f_pear.append(f_fin['ferrite'])
+        f_ferr.append(f_fin['ferrite'])
+        f_pear.append(f_fin['pearlite'])
         f_bain.append(f_fin['bainite'])
         f_mart.append(f_fin['martensite'])
         Hv.append(f_fin['Hv'])
@@ -47,8 +47,8 @@ if __name__ == '__main__':
     fig.subplots_adjust(wspace=.2)
 
     # Plot
-    ax1.plot(cooling_rates, f_ferr, label='Pearlite')
-    ax1.plot(cooling_rates, f_pear, label='Ferrite')
+    ax1.plot(cooling_rates, f_ferr, label='Ferrite')
+    ax1.plot(cooling_rates, f_pear, label='Pearlite')
     ax1.plot(cooling_rates, f_bain, label='Bainite')
     ax1.plot(cooling_rates, f_mart, label='Martensite')
     ax1.set_xlabel(u'Cooling rate (°C/s)')
