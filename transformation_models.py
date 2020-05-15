@@ -648,10 +648,14 @@ class TransformationDiagrams:
         t, T, f_bain = self.bainite.get_transformed_fraction(t, T, n)
         t, T, f_mart = self.martensite.get_transformed_fraction(t, T, n)
 
-        f_ferr_inc = np.diff(f_ferr, prepend=0)
-        f_pear_inc = np.diff(f_pear, prepend=0)
-        f_bain_inc = np.diff(f_bain, prepend=0)
-        f_mart_inc = np.diff(f_mart, prepend=0)
+        f_ferr_inc = np.zeros(f_ferr.shape)
+        f_pear_inc = np.zeros(f_pear.shape)
+        f_bain_inc = np.zeros(f_bain.shape)
+        f_mart_inc = np.zeros(f_mart.shape)
+        f_ferr_inc[1:] = np.diff(f_ferr)
+        f_pear_inc[1:] = np.diff(f_pear)
+        f_bain_inc[1:] = np.diff(f_bain)
+        f_mart_inc[1:] = np.diff(f_mart)
 
         f_corr = pd.DataFrame(columns=['t', 'T', 'ferrite', 'pearlite', 'bainite', 'martensite', 'austenite'])
         f_corr['t'] = t
