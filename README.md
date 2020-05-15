@@ -6,6 +6,8 @@ Feel free to edit the code to, for instance, automatize the generation of diagra
 
 The repository also contains scripts for easy plotting of phase diagrams and phase fraction curves: [`plot_diagrams.py`](https://github.com/arthursn/transformation-diagrams/blob/master/plot_diagrams.py) and [`plot_phase_fractions.py`](https://github.com/arthursn/transformation-diagrams/blob/master/plot_phase_fractions.py).
 
+The hardness of the heat treated material is estimated using Maynier et al., 1978 and implemented by Li et al., 1998. When `plot_phase_fractions.py` is called, the hardness of the final microstructure is displayed on the plot.
+
 > **DISCLAIMER**: Calculation of phase fractions doesn't take into account how a phase transformation affect the austenite composition and therefore might affect the subsequent phase transformations. Use this model at your own risk.
 
 # Dependencies
@@ -105,7 +107,7 @@ Plot phase fraction for a thermal cycle specified by `-Tini`, `-t`, and `-phi` p
 
 ```bash
 # Run directly from the shell
-python3 plot_phase_fractions.py -C 0.1 -Mn 1 -Tini 900 -t 40 -phi 20
+python3 plot_phase_fractions.py -C 0.1 -Mn 1 -Tini 900 -t 45 -phi 20
 ```
 
 ```python
@@ -114,3 +116,19 @@ python3 plot_phase_fractions.py -C 0.1 -Mn 1 -Tini 900 -t 40 -phi 20
 ```
 
 ![Fe-1%Mn-0.1%Mn phase fraction](img/Fe-1Mn-01C_phase_fraction.png)
+
+Custom scripts can also be written. For example, [`hardness_vs_.py`](https://github.com/arthursn/transformation-diagrams/blob/master/examples.py) calculates the phase fractions and hardness values for a list of cooling rates and plots the phase fractions and hardness as a function of the cooling rate.
+
+```bash
+# Run directly from the shell
+python3 hardness_vs_cooling_rate.py
+```
+
+```python
+# Run using jupyter or ipython (e.g., if you're running Spyder)
+%run hardness_vs_cooling_rate.py
+```
+
+![Hardness vs cooling rate](img/hardness_vs_cooling_rate.png)
+
+The hardness is given in Vickers. A hardness conversion tool for other units (e.g., Rockewell, Brinell) can be found here: [Hardness conversion tool](https://arthursn.github.io/hardness.html)
