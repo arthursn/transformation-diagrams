@@ -866,7 +866,7 @@ class TransformationDiagrams:
 
         return ax
 
-    def CCT(self, Tini=900, fs=1e-2, ff=.99, cooling_rates=10**np.linspace(-4, 4, 320), ax=None, **kwargs):
+    def CCT(self, Tini=900, fs=1e-2, ff=.99, phi_min=1e-4, phi_max=1e4, phi_steps=420, ax=None, **kwargs):
         """
         Plot CCT diagram
 
@@ -893,8 +893,8 @@ class TransformationDiagrams:
             fig, ax = plt.subplots(figsize=(6, 6))
         else:
             fig = ax.get_figure()
-
-        cooling_rates = np.array(cooling_rates)
+        
+        cooling_rates = 10**np.linspace(np.log10(phi_min), np.log10(phi_max), phi_steps)
         draw_cooling = kwargs.get('draw_cooling', True)
 
         # Ferrite
