@@ -43,11 +43,12 @@ if __name__ == '__main__':
 
     # Plot TTT
     diagrams.TTT(ax=ax1)
-    ax1.set_ylim(alloy.Ms - 200, Tini + 50)
+    #ax1.set_ylim(alloy.Ms - 200, Tini + 50)
 
+    t_min, t_max = ax1.get_xlim()
     # Plot CCT
-    diagrams.CCT(Tini=Tini, ax=ax2)
-    ax2.set_ylim(alloy.Ms - 200, Tini + 50)
+    diagrams.CCT(Tini=Tini, ax=ax2, phi_min=Tini/t_max, phi_max=Tini/t_min)
+    #ax2.set_ylim(alloy.Ms - 200, Tini + 50)
 
     fig.suptitle(ax1.get_title())
     ax1.set_title('')

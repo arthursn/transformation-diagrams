@@ -4,15 +4,13 @@
 """
 Plot TTT (or CCT) diagram and transformed fraction
 """
-import argparse
-import numpy as np
 import matplotlib.pyplot as plt
 from transformation_models import Alloy, TransformationDiagrams
 
 if __name__ == '__main__':
     # Defines alloy (grain size gs and composition)
-    # alloy = Alloy(gs=7, C=0.37, Mn=0.77, Si=0.15, Ni=0.04, Cr=0.98, Mo=0.21)
-    alloy = Alloy(gs=7, C=1, Mn=0.7, Si=0.3, Ni=0.15, Cr=5.125, Mo=1.15)
+    alloy = Alloy(gs=7, C=0.37, Mn=0.77, Si=0.15, Ni=0.04, Cr=0.98, Mo=0.21)
+    # alloy = Alloy(gs=7, C=1, Mn=0.7, Si=0.3, Ni=0.15, Cr=5.125, Mo=1.15)
 
     # Initializes diagrams object
     diagrams = TransformationDiagrams(alloy)
@@ -27,7 +25,8 @@ if __name__ == '__main__':
     #ax1.set_xlim(1e-2, 1e8)
     #ax1.set_ylim(300, 1000)
     
-    diagrams.CCT(ax=ax2, phi_min=900/1e19, phi_max=900/1e9)
+    diagrams.CCT(ax=ax2)
+    # diagrams.CCT(ax=ax2, phi_min=900/1e19, phi_max=900/1e8)
     #ax2.set_xlim(1e-2, 1e8)
     #ax2.set_ylim(300, 1000)
 

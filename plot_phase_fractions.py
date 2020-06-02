@@ -52,8 +52,12 @@ if __name__ == '__main__':
         diagrams.TTT(ax=ax1)
         xaxis = 't'
     else:
+        diagrams.TTT(ax=ax1)
+        t_min, t_max = ax1.get_xlim()
+        ax1.clear()
+        
         # Otherwise, plot CCT
-        diagrams.CCT(Tini=Tini, ax=ax1)
+        diagrams.CCT(Tini=Tini, ax=ax1, phi_min=Tini/t_max, phi_max=Tini/t_min)
         xaxis = 'T'
 
     t_, T_ = [0, t], [Tini, Tini - phi*t]
