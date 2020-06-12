@@ -862,7 +862,7 @@ class TransformationDiagrams:
         ax.set_ylabel(u'Temperature (°C)')
         ax.set_title(self.alloy.format_composition())
         ax.legend(loc='upper center', ncol=4, bbox_to_anchor=(0.5, -.15))
-        fig.tight_layout()
+        fig.subplots_adjust(bottom=.2)
 
         return ax
 
@@ -937,7 +937,7 @@ class TransformationDiagrams:
         ax.set_ylabel(u'Temperature (°C)')
         ax.set_title(self.alloy.format_composition())
         ax.legend(loc='upper center', ncol=4, bbox_to_anchor=(0.5, -.15))
-        fig.tight_layout()
+        fig.subplots_adjust(bottom=.2)
 
         return ax
 
