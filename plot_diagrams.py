@@ -24,7 +24,8 @@ if __name__ == '__main__':
     parser.add_argument('-Cu', '--Cu', type=float, default=0., help='Copper wt.%%')
     parser.add_argument('-Al', '--Al', type=float, default=0., help='Aluminium wt.%%')
     parser.add_argument('-W', '--W', type=float, default=0., help='Tungsten wt.%%')
-    parser.add_argument('-Tini', '--Tini', type=float, default=900., help='Initial continuous cooling temperature (oC)')
+    parser.add_argument('-Tini', '--Tini', type=float, default=900.,
+                        help='Initial continuous cooling temperature (oC)')
 
     args = parser.parse_args()
 
@@ -38,20 +39,20 @@ if __name__ == '__main__':
     # Initializes diagrams object
     diagrams = TransformationDiagrams(alloy)
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6), sharey=True)
+    ax2.yaxis.set_tick_params(labelbottom=True)
     fig.subplots_adjust(wspace=.2)
 
     # Plot TTT
     diagrams.TTT(ax=ax1)
-    #ax1.set_ylim(alloy.Ms - 200, Tini + 50)
 
     t_min, t_max = ax1.get_xlim()
     # Plot CCT
     diagrams.CCT(Tini=Tini, ax=ax2, phi_min=Tini/t_max, phi_max=Tini/t_min)
-    #ax2.set_ylim(alloy.Ms - 200, Tini + 50)
 
     fig.suptitle(ax1.get_title())
     ax1.set_title('')
     ax2.set_title('')
+    ax1.set_ylim(25, max(ax1.get_ylim()[1], Tini))
 
     plt.show()

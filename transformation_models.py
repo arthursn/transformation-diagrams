@@ -186,6 +186,7 @@ def Ms_VanBohemen(**comp):
     Mo = comp.get('Mo', 0)
     return 565 - (31*Mn + 13*Si + 10*Cr + 18*Ni + 12*Mo) - 600*(1-np.exp(-0.96*C))
 
+
 def Hv_martensite(phi700, **comp):
     """
     Martensite Vickers hardness empirical equation
@@ -197,6 +198,7 @@ def Hv_martensite(phi700, **comp):
     Ni = comp.get('Ni', 0)
     Cr = comp.get('Cr', 0)
     return 127 + 949*C + 27*Si + 11*Mn + 8*Ni + 16*Cr + 21*np.log10(phi700*3600)
+
 
 def Hv_bainite(phi700, **comp):
     """
@@ -212,6 +214,7 @@ def Hv_bainite(phi700, **comp):
     return -323 + 185*C + 330*Si + 153*Mn + 65*Ni + 144*Cr + 191*Mo + \
         (89 + 53*C - 55*Si - 22*Mn - 10*Ni - 20*Cr - 33*Mo)*np.log10(phi700*3600)
 
+
 def Hv_ferrite_pearlite(phi700, **comp):
     """
     Ferrite + pearlite Vickers hardness empirical equation
@@ -226,6 +229,7 @@ def Hv_ferrite_pearlite(phi700, **comp):
     V = comp.get('V', 0)
     return 42 + 223*C + 53*Si + 30*Mn + 12.6*Ni + 7*Cr + 19*Mo + \
         (10 - 19*Si + 4*Ni + 8*Cr + 130*V)*np.log10(phi700*3600)
+
 
 class Alloy:
     """
@@ -297,7 +301,8 @@ class SigmoidalFunction(object):
         # Check for compulsory subclass attributes
         for var in ['xmin', 'xmax', 'ymin', 'ymax', 'n']:
             if not hasattr(cls, var):
-                raise NotImplementedError('Class {} lacks required `{}` class attribute'.format(cls, var))
+                raise NotImplementedError(
+                    'Class {} lacks required `{}` class attribute'.format(cls, var))
 
         # This is were S(X) or I(X) is returned
         return cls.val(x)
@@ -405,14 +410,16 @@ class PhaseTransformation(object):
         # Check for compulsory object attributes
         for var in ['comp_factor', 'Ts', 'Tf', 'Hv']:
             if not hasattr(self, var):
-                raise NotImplementedError('Object {} lacks required `{}` attribute'.format(self, var))
+                raise NotImplementedError(
+                    'Object {} lacks required `{}` attribute'.format(self, var))
 
     @classmethod
     def __init_subclass__(cls):
         # Check for compulsory subclass attributes
         for var in ['Q', 'n1', 'n2']:
             if not hasattr(cls, var):
-                raise NotImplementedError('Class {} lacks required `{}` class attribute'.format(cls, var))
+                raise NotImplementedError(
+                    'Class {} lacks required `{}` class attribute'.format(cls, var))
 
     @abstractmethod
     def initialize(self):
@@ -706,7 +713,8 @@ class TransformationDiagrams:
         f_bain_inc[1:] = np.diff(f_bain)
         f_mart_inc[1:] = np.diff(f_mart)
 
-        f = pd.DataFrame(columns=['t', 'T', 'ferrite', 'pearlite', 'bainite', 'martensite', 'austenite'])
+        f = pd.DataFrame(columns=['t', 'T', 'ferrite', 'pearlite',
+                                  'bainite', 'martensite', 'austenite'])
         f['t'] = t
         f['T'] = T
         f.fillna(0, inplace=True)
@@ -754,12 +762,12 @@ class TransformationDiagrams:
             if phi700 == 0:
                 phi700 = None
         except ValueError:
-            # This might happen for isothermal heat treatments 
+            # This might happen for isothermal heat treatments
             pass
 
         if phi700 is not None:
             f['Hv'] = f['martensite']*self.martensite.Hv(phi700) + f['bainite']*self.bainite.Hv(phi700) + \
-                    (f['ferrite'] + f['pearlite'])*self.ferrite.Hv(phi700)
+                (f['ferrite'] + f['pearlite'])*self.ferrite.Hv(phi700)
         else:
             f['Hv'] = np.nan
 
@@ -835,33 +843,53 @@ class TransformationDiagrams:
         T = np.arange(self.alloy.Bs, self.alloy.Ae3)
         ts = self.ferrite.get_transformation_time(T, fs)  # start
         tf = self.ferrite.get_transformation_time(T, ff)  # finish
-        ax.plot(ts, T, color=self.colors_dict['ferrite'], label='Ferrite {:g}%'.format(100*fs), **kwargs)
-        ax.plot(tf, T, color=self.colors_dict['ferrite'], ls='--', label='Ferrite {:g}%'.format(100*ff), **kwargs)
+        ax.plot(ts, T, color=self.colors_dict['ferrite'],
+                label='Ferrite {:g}%'.format(100*fs), **kwargs)
+        ax.plot(tf, T, color=self.colors_dict['ferrite'], ls='--',
+                label='Ferrite {:g}%'.format(100*ff), **kwargs)
 
         # Pearlite
         T = np.arange(self.alloy.Bs, self.alloy.Ae1)
         ts = self.pearlite.get_transformation_time(T, fs)
         tf = self.pearlite.get_transformation_time(T, ff)
-        ax.plot(ts, T, color=self.colors_dict['pearlite'], label='Pearlite {:g}%'.format(100*fs), **kwargs)
-        ax.plot(tf, T, color=self.colors_dict['pearlite'], ls='--', label='Pearlite {:g}%'.format(100*ff), **kwargs)
+        ax.plot(ts, T, color=self.colors_dict['pearlite'],
+                label='Pearlite {:g}%'.format(100*fs), **kwargs)
+        ax.plot(tf, T, color=self.colors_dict['pearlite'], ls='--',
+                label='Pearlite {:g}%'.format(100*ff), **kwargs)
 
         # Bainite
         T = np.arange(self.alloy.Ms, self.alloy.Bs)
         ts = self.bainite.get_transformation_time(T, fs)
         tf = self.bainite.get_transformation_time(T, ff)
-        ax.plot(ts, T, color=self.colors_dict['bainite'], label='Bainite {:g}%'.format(100*fs), **kwargs)
-        ax.plot(tf, T, color=self.colors_dict['bainite'], ls='--', label='Bainite {:g}%'.format(100*ff), **kwargs)
+        ax.plot(ts, T, color=self.colors_dict['bainite'],
+                label='Bainite {:g}%'.format(100*fs), **kwargs)
+        ax.plot(tf, T, color=self.colors_dict['bainite'], ls='--',
+                label='Bainite {:g}%'.format(100*ff), **kwargs)
+
+        # Draws Ae1 and Ae3 lines
+        ax.axhline(self.alloy.Ae3, xmax=.1, color=self.colors_dict['ferrite'], ls=':')
+        ax.axhline(self.alloy.Ae1, xmax=.1, color=self.colors_dict['pearlite'], ls=':')
 
         # Draws Bs and Ms lines
-        ax.axhline(self.alloy.Bs, color=self.colors_dict['bainite'], ls=':', label='Bs')
-        ax.axhline(self.alloy.Ms, color=self.colors_dict['martensite'], label='Ms')
+        ax.axhline(self.alloy.Bs, color=self.colors_dict['bainite'], ls=':')
+        ax.axhline(self.alloy.Ms, color=self.colors_dict['martensite'])
 
         ax.set_xscale('log')
-        ax.set_ylim(25)
         ax.set_xlabel('Time (s)')
         ax.set_ylabel(u'Temperature (°C)')
         ax.set_title(self.alloy.format_composition())
-        ax.legend(loc='upper center', ncol=4, bbox_to_anchor=(0.5, -.15))
+
+        xmin = ax.get_xlim()[0]
+        ax.text(xmin*1.5, self.alloy.Ae3, 'Ae3',
+                color=self.colors_dict['ferrite'], ha='left', va='bottom')
+        ax.text(xmin*1.5, self.alloy.Ae1, 'Ae1',
+                color=self.colors_dict['pearlite'], ha='left', va='bottom')
+        ax.text(xmin*1.5, self.alloy.Bs, 'Bs',
+                color=self.colors_dict['bainite'], ha='left', va='bottom')
+        ax.text(xmin*1.5, self.alloy.Ms, 'Ms',
+                color=self.colors_dict['martensite'], ha='left', va='bottom')
+
+        ax.legend(loc='upper center', ncol=3, bbox_to_anchor=(0.5, -.15))
         fig.subplots_adjust(bottom=.2)
 
         return ax
@@ -893,14 +921,17 @@ class TransformationDiagrams:
             fig, ax = plt.subplots(figsize=(6, 6))
         else:
             fig = ax.get_figure()
-        
+
         cooling_rates = 10**np.linspace(np.log10(phi_min), np.log10(phi_max), phi_steps)
         draw_cooling = kwargs.get('draw_cooling', True)
 
         # Ferrite
-        Ts = self.ferrite.get_transformation_temperature(Tini, self.alloy.Bs, cooling_rates, fs)  # start
-        Tf = self.ferrite.get_transformation_temperature(Tini, self.alloy.Bs, cooling_rates, ff)  # finish
-        ax.plot(Ts/cooling_rates, Ts, color=self.colors_dict['ferrite'], label='Ferrite {:g}%'.format(100*fs), **kwargs)
+        Ts = self.ferrite.get_transformation_temperature(
+            Tini, self.alloy.Bs, cooling_rates, fs)  # start
+        Tf = self.ferrite.get_transformation_temperature(
+            Tini, self.alloy.Bs, cooling_rates, ff)  # finish
+        ax.plot(Ts/cooling_rates, Ts,
+                color=self.colors_dict['ferrite'], label='Ferrite {:g}%'.format(100*fs), **kwargs)
         ax.plot(Tf/cooling_rates, Tf, color=self.colors_dict['ferrite'],
                 ls='--', label='Ferrite {:g}%'.format(100*ff), **kwargs)
 
@@ -915,12 +946,16 @@ class TransformationDiagrams:
         # Bainite
         Ts = self.bainite.get_transformation_temperature(Tini, self.alloy.Ms, cooling_rates, fs)
         Tf = self.bainite.get_transformation_temperature(Tini, self.alloy.Ms, cooling_rates, ff)
-        ax.plot(Ts/cooling_rates, Ts, color=self.colors_dict['bainite'], label='Bainite {:g}%'.format(100*fs), **kwargs)
+        ax.plot(Ts/cooling_rates, Ts,
+                color=self.colors_dict['bainite'], label='Bainite {:g}%'.format(100*fs), **kwargs)
         ax.plot(Tf/cooling_rates, Tf, color=self.colors_dict['bainite'],
                 ls='--', label='Bainite {:g}%'.format(100*ff), **kwargs)
 
-        ax.axhline(self.alloy.Bs, color=self.colors_dict['bainite'], ls=':', label='Bs')
-        ax.axhline(self.alloy.Ms, color=self.colors_dict['martensite'], label='Ms')
+        ax.axhline(self.alloy.Ae3, xmax=.1, color=self.colors_dict['ferrite'], ls=':')
+        ax.axhline(self.alloy.Ae1, xmax=.1, color=self.colors_dict['pearlite'], ls=':')
+
+        ax.axhline(self.alloy.Bs, color=self.colors_dict['bainite'], ls=':')
+        ax.axhline(self.alloy.Ms, color=self.colors_dict['martensite'])
 
         # Draw cooling curves
         if draw_cooling:
@@ -932,11 +967,21 @@ class TransformationDiagrams:
                 ax.plot(t, T, 'k:', **kw)
 
         ax.set_xscale('log')
-        ax.set_ylim(25)
         ax.set_xlabel('Time (s)')
         ax.set_ylabel(u'Temperature (°C)')
         ax.set_title(self.alloy.format_composition())
-        ax.legend(loc='upper center', ncol=4, bbox_to_anchor=(0.5, -.15))
+
+        xmin = ax.get_xlim()[0]
+        ax.text(xmin*1.5, self.alloy.Ae3, 'Ae3',
+                color=self.colors_dict['ferrite'], ha='left', va='bottom')
+        ax.text(xmin*1.5, self.alloy.Ae1, 'Ae1',
+                color=self.colors_dict['pearlite'], ha='left', va='bottom')
+        ax.text(xmin*1.5, self.alloy.Bs, 'Bs',
+                color=self.colors_dict['bainite'], ha='left', va='bottom')
+        ax.text(xmin*1.5, self.alloy.Ms, 'Ms',
+                color=self.colors_dict['martensite'], ha='left', va='bottom')
+
+        ax.legend(loc='upper center', ncol=3, bbox_to_anchor=(0.5, -.15))
         fig.subplots_adjust(bottom=.2)
 
         return ax
@@ -992,12 +1037,13 @@ class TransformationDiagrams:
         if f['bainite'].max() > 0:
             ax.plot(f[xaxis], f['bainite'], color=self.colors_dict['bainite'], label='Bainite')
         if f['martensite'].max() > 0:
-            ax.plot(f[xaxis], f['martensite'], color=self.colors_dict['martensite'], label='Martensite')
+            ax.plot(f[xaxis], f['martensite'],
+                    color=self.colors_dict['martensite'], label='Martensite')
         if f['austenite'].max() > 0:
             ax.plot(f[xaxis], f['austenite'], color=self.colors_dict['austenite'], label='Austenite')
 
         if not np.isnan(f.iloc[-1]['Hv']):
-            T_ref = 25;
+            T_ref = 25
             try:
                 Hv_ref = interp1d(f['T'], f['Hv'])(T_ref)
             except ValueError:
