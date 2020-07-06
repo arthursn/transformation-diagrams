@@ -117,7 +117,7 @@ python3 plot_phase_fractions.py -C 0.1 -Mn 1 -Tini 900 -t 45 -phi 20
 
 ![Fe-1%Mn-0.1%Mn phase fraction](img/Fe-1Mn-01C_phase_fraction.png)
 
-Custom scripts can also be written. For example, [`hardness_vs_.py`](https://github.com/arthursn/transformation-diagrams/blob/master/examples.py) calculates the phase fractions and hardness values for a list of cooling rates and plots the phase fractions and hardness as a function of the cooling rate.
+Custom scripts can also be written. For example, [`hardness_vs_cooling_rate.py`](https://github.com/arthursn/transformation-diagrams/blob/master/hardness_vs_cooling_rate.py) calculates the phase fractions and hardness values for a list of cooling rates and plots the phase fractions and hardness as a function of the cooling rate.
 
 ```bash
 # Run directly from the shell
