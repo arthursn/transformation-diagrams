@@ -463,8 +463,8 @@ class PhaseTransformation(object):
 
     def get_transformation_temperature(self, Tini, Tfin, cooling_rate, f, dT=1.0):
         """
-        Calculates the temperature for the material to transform to a 
-        fraction f during the cooling from Tini to Tfin at a cooling rate 
+        Calculates the temperature for the material to transform to a
+        fraction f during the cooling from Tini to Tfin at a cooling rate
         cooling_rate
 
         Parameters
@@ -516,7 +516,7 @@ class PhaseTransformation(object):
         T : iterable
             Temperatures at the instants of time t
         n : int (optional)
-            Number of points at which the transformed fractions are 
+            Number of points at which the transformed fractions are
             calculated
             Default: 1000
 
@@ -620,7 +620,7 @@ class Martensite:
 
     def get_transformed_fraction(self, t, T, n=1000):
         """
-        Calculates the transformed martensite fraction for a given thermal 
+        Calculates the transformed martensite fraction for a given thermal
         cycle T(t) using the Koistinen-Marburger equation
 
         Parameters
@@ -630,7 +630,7 @@ class Martensite:
         T : iterable
             Temperatures at the instants of time t
         n : int (optional)
-            Number of points at which the transformed fractions are 
+            Number of points at which the transformed fractions are
             calculated
             Default: 1000
 
@@ -676,6 +676,9 @@ class TransformationDiagrams:
         self.bainite = Bainite(self.alloy)
         self.martensite = Martensite(self.alloy)
 
+        self.df_TTT = None
+        self.df_CCT = None
+
     def get_transformed_fraction(self, t, T, n=1000):
         """
         Calculates transformation curves for a given T(t) thermal cycle
@@ -687,7 +690,7 @@ class TransformationDiagrams:
         T : iterable
             Temperatures at the instants of time t
         n : int (optional)
-            Number of points at which the transformed fractions are 
+            Number of points at which the transformed fractions are
             calculated
             Default: 1000
 
@@ -847,6 +850,7 @@ class TransformationDiagrams:
                 label='Ferrite {:g}%'.format(100*fs), **kwargs)
         ax.plot(tf, T, color=self.colors_dict['ferrite'], ls='--',
                 label='Ferrite {:g}%'.format(100*ff), **kwargs)
+        df_ferrite = pd.DataFrame(dict(T_ferrite=T, ts_ferrite=ts, tf_ferrite=tf))
 
         # Pearlite
         T = np.arange(self.alloy.Bs, self.alloy.Ae1)
@@ -856,6 +860,7 @@ class TransformationDiagrams:
                 label='Pearlite {:g}%'.format(100*fs), **kwargs)
         ax.plot(tf, T, color=self.colors_dict['pearlite'], ls='--',
                 label='Pearlite {:g}%'.format(100*ff), **kwargs)
+        df_pearlite = pd.DataFrame(dict(T_pearlite=T, ts_pearlite=ts, tf_pearlite=tf))
 
         # Bainite
         T = np.arange(self.alloy.Ms, self.alloy.Bs)
@@ -865,6 +870,9 @@ class TransformationDiagrams:
                 label='Bainite {:g}%'.format(100*fs), **kwargs)
         ax.plot(tf, T, color=self.colors_dict['bainite'], ls='--',
                 label='Bainite {:g}%'.format(100*ff), **kwargs)
+        df_bainite = pd.DataFrame(dict(T_bainite=T, ts_bainite=ts, tf_bainite=tf))
+
+        self.df_TTT = pd.concat([df_ferrite, df_pearlite, df_bainite], axis=1)
 
         # Draws Ae1 and Ae3 lines
         ax.axhline(self.alloy.Ae3, xmax=.1, color=self.colors_dict['ferrite'], ls=':')
@@ -1006,7 +1014,7 @@ class TransformationDiagrams:
             and 'austenite'
             Default: 't'
         ax : AxesSubplot object (optional)
-            Axis where to plot the phase fraction curves. If None, then a 
+            Axis where to plot the phase fraction curves. If None, then a
             new axis is created
             Default: None
 

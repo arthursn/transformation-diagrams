@@ -26,12 +26,14 @@ if __name__ == '__main__':
     parser.add_argument('-W', '--W', type=float, default=0., help='Tungsten wt.%%')
     parser.add_argument('-Tini', '--Tini', type=float, default=900.,
                         help='Initial continuous cooling temperature (oC)')
+    parser.add_argument('-e', '--exp', action='store_true', help='Export to .xlsx format')
 
     args = parser.parse_args()
 
     comp = vars(args)
     gs = comp.pop('gs')
     Tini = comp.pop('Tini')
+    export = comp.pop('exp')
 
     # Defines alloy (grain size gs and composition)
     alloy = Alloy(gs=gs, **comp)
@@ -46,11 +48,21 @@ if __name__ == '__main__':
     # Plot TTT
     diagrams.TTT(ax=ax1)
 
+    title = ax1.get_title()
+
+    if export:
+        try:
+            fout = '{}_TTT.xlsx'.format(title.strip(' (wt.%)'))
+            print('Exporting data to {}'.format(fout))
+            diagrams.df_TTT.to_excel(fout)
+        except Exception as ex:
+            print(ex)
+
     t_min, t_max = ax1.get_xlim()
     # Plot CCT
     diagrams.CCT(Tini=Tini, ax=ax2, phi_min=Tini/t_max, phi_max=Tini/t_min)
 
-    fig.suptitle(ax1.get_title())
+    fig.suptitle(title)
     ax1.set_title('')
     ax2.set_title('')
     ax1.set_ylim(25, max(ax1.get_ylim()[1], Tini))
