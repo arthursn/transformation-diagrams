@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 #! -*- coding: utf-8 -*-
 
 import numpy as np
@@ -111,12 +110,12 @@ def Ae3_Andrews(**comp):
     V = comp.get('V', 0)
     W = comp.get('W', 0)
     Cu = comp.get('Cu', 0)
-    P = comp.get('P', 0)
-    Al = comp.get('Al', 0)
-    As = comp.get('As', 0)
-    Ti = comp.get('Ti', 0)
+    # P = comp.get('P', 0)
+    # Al = comp.get('Al', 0)
+    # As = comp.get('As', 0)
+    # Ti = comp.get('Ti', 0)
     return 910 - 203*np.sqrt(C) + 44.7*Si - 15.2*Ni + 31.5*Mo + 104*V + 13.1*W - \
-        30.0*Mn + 11.0*Cr + 20.0*Cu - 700*P - 400*Al - 120*As - 400*Ti
+        30.0*Mn + 11.0*Cr + 20.0*Cu  # - 700*P - 400*Al - 120*As - 400*Ti
 
 
 def Bs_Li(**comp):
@@ -275,7 +274,9 @@ class Alloy:
             if v > vmin:
                 fmt.append('{:g}{:}'.format(v, k))
         fmt.insert(0, 'Fe')  # assumes it is steel
-        return '-'.join(fmt) + ' (wt.%)'
+        fmt = '-'.join(fmt) + ' (wt.%)'
+        fmt += '\nASTM grain size {:}'.format(self.gs)
+        return fmt
 
 
 class SigmoidalFunction(object):
