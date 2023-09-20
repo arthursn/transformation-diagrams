@@ -1,5 +1,3 @@
-#! -*- coding: utf-8 -*-
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -7,6 +5,8 @@ from abc import abstractmethod
 from scipy import integrate
 from scipy.interpolate import splrep, splev, interp1d
 from scipy.optimize import root
+import math
+import scipy.special as sps
 
 R = 8.314459
 K = 273.15
@@ -32,6 +32,44 @@ def FC(**comp):
     Mo = comp.get('Mo', 0)
     return np.exp((1.0 + 6.31*C + 1.78*Mn + 0.31*Si + 1.12*Ni + 2.7*Cr + 4.06*Mo))
 
+def interpolate_linear(x, x_list, y_list):
+                if x <= x_list[0]:
+                    return y_list[0]
+                elif x >= x_list[-1]:
+                    return y_list[-1]
+                else:
+                    for i in range(len(x_list) - 1):
+                        if x_list[i] <= x < x_list[i + 1]:
+                            # Perform linear interpolation
+                            x0, x1 = x_list[i], x_list[i + 1]
+                            y0, y1 = y_list[i], y_list[i + 1]
+                            return y0 + (y1 - y0) * (x - x0) / (x1 - x0)
+
+def biot_number(h,ro,k):
+  Bi = (h*(ro/2))/k
+
+  # Original data
+  original_Bi = [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.09, 0.10, 0.15, 0.20, 0.25, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.0, 20.0, 30.0, 40.0, 50.0, 100.0]
+  original_zeta1 = [0.1412, 0.1995, 0.2440, 0.2814, 0.3143, 0.3438, 0.3709, 0.3960, 0.4195, 0.4417, 0.5376, 0.6170, 0.6856, 0.7465, 0.8516, 0.9408, 1.0184, 1.0873, 1.1490, 1.2048, 1.2558, 1.5994, 1.7887, 1.9081, 1.9898, 2.0490, 2.0937, 2.1286, 2.1566, 2.1795, 2.2881, 2.3261, 2.3455, 2.3572, 2.3809]
+  original_C1 = [1.0025, 1.0050, 1.0075, 1.0099, 1.0124, 1.0148, 1.0173, 1.0197, 1.0222, 1.0246, 1.0365, 1.0483, 1.0598, 1.0712, 1.0932, 1.1143, 1.1345, 1.1539, 1.1724, 1.1902, 1.2071, 1.3384, 1.4191, 1.4698, 1.5029, 1.5253, 1.5411, 1.5526, 1.5611, 1.5677, 1.5919, 1.5973, 1.5993, 1.6002, 1.6015]
+
+  # Bi value for interpolation
+  target_Bi = Bi
+
+  # Interpolate zeta1 and C1 for the target Bi value
+  zeta1 = interpolate_linear(target_Bi, original_Bi, original_zeta1)
+  C1 = interpolate_linear(target_Bi, original_Bi, original_C1)
+  return zeta1,C1
+
+def calculate_T(max_iter_time, r_max, alpha, ro, zeta1, C1, Tinf, Ti):
+    T = np.empty((max_iter_time + 1, r_max + 1))  # Initialize the T array
+    for t_ in range(1, max_iter_time):
+        for i in range(1, r_max):
+            Fo = (t_ * alpha) / (ro ** 2)
+            r_ = (i * 10 ** (-3)) / ro
+            O = C1 * math.exp((-zeta1 ** 2) * Fo)
+            T[t_][i] = Tinf + O * (Ti - Tinf) * sps.j0(zeta1 * r_)
+    return T
 
 def PC(**comp):
     """
@@ -886,7 +924,7 @@ class TransformationDiagrams:
         ax.set_xscale('log')
         ax.set_xlabel('Time (s)')
         ax.set_ylabel(u'Temperature (°C)')
-        ax.set_title(self.alloy.format_composition())
+        ax.set_title(f'{self.alloy.format_composition()} - Convection Coefficient (h): {h} W/m²K')
 
         xmin = ax.get_xlim()[0]
         ax.text(xmin*1.5, self.alloy.Ae3, 'Ae3',
@@ -900,6 +938,42 @@ class TransformationDiagrams:
 
         ax.legend(loc='upper center', ncol=3, bbox_to_anchor=(0.5, -.15))
         fig.subplots_adjust(bottom=.2)
+
+        return ax
+
+    def temperature_distribution(self, r_values, ax=None, **kwargs):
+        """
+        Plot temperature distribution overlay
+        ax : AxesSubplot object (optional)
+            Axis where to plot the TTT curve. If None, then a new axis is
+            created
+            Default: None
+        **kwargs :
+            Optional arguments passed to ax.plot(*args, **kwargs)
+
+        Returns
+        -------
+        ax : AxesSubplot object
+        """
+        if ax is None:
+            fig, ax = plt.subplots(figsize=(6, 6))
+        else:
+            fig = ax.get_figure()
+        
+        ro = r_max*10**(-3)
+
+        zeta1,C1=biot_number(h,ro,k)
+
+        # Calculate temperature distribution for the specified radial positions
+        for r in r_values:
+            T = calculate_T(max_iter_time, r_max, alpha, ro, zeta1, C1, Tinf, Ti)
+            ax.semilogx(range(max_iter_time + 1), T[:, r], label=f"r={r} mm")
+
+        # Label the temperature distribution subplot
+        ax.set_xlabel('Time (s) - Logarithmic Scale')
+        ax.set_ylabel('Temperature ($^\circ$C)')
+
+        ax.set_title(f'Convection Coefficient (h): {h} W/m²K')
 
         return ax
 
